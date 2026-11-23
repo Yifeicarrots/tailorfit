@@ -1,0 +1,509 @@
+▗ ▗   ▖ ▖  Claude Code v2.1.330
+           Opus 5.5 · Claude Enterprise
+ ▘▘   ▝▝   ~/tailorfit
+
+
+❯ /clear                                                                        
+
+❯ Interview me to improve the CLAUDE.md that /init generated. Ask one question  
+  at a time and wait for my answer. Cover: tech stack, architecture decisions   
+  (including the two-stage Claude pipeline: ExperienceSelector then             
+  ResumeRewriter), coding conventions, testing strategy (TDD unit tests with a  
+  mocked Claude client, kept separate from the eval suite that calls the real   
+  API), git conventions (commit message prefixes, no squash merging), and       
+  project-specific do's and don'ts. Read @docs/PRD.md first so you don't ask    
+  about anything already covered there. When we're done, show me the proposed   
+  CLAUDE.md as a diff before writing it. Keep it concise and import             
+  @docs/PRD.md rather than copying its contents.                                
+  ⎿  Read docs/PRD.md (59 lines)
+
+⏺ I've read the PRD and the current CLAUDE.md. I'll skip anything the PRD
+  already covers (the pipeline stages, validation rules, the API-key constraint,
+  fictional data, what's out of scope) and ask only about the gaps.
+
+  Question 1 of ~8: tech stack and storage
+
+  The PRD says there are no user accounts, so where should a user's experience
+  library live?
+
+  - Browser localStorage: no backend storage. Data stays on one device.
+  - A local file or SQLite on the server: simple, but every visitor shares it,
+    which only works for a single-user demo.
+  - A hosted database (e.g. Postgres, Supabase), keyed by an anonymous ID.
+  - Something else.
+
+  Also, have you picked any of these yet? If not, I'll suggest defaults when we
+  get there.
+  - The Anthropic SDK (@anthropic-ai/sdk) and which Claude model to use
+  - A schema/validation library for the JSON responses (e.g. Zod)
+  - A test runner (e.g. Vitest or Jest)
+
+✻ Crunched for 7s · done 6:37 PM
+
+❯ I've updated the PRD to include user accounts. Use Supabase for Google        
+  sign-in and a hosted Postgres database, with row-level security so users only 
+  access their own data. Unit tests should mock Supabase, the same way they     
+  mock the Claude client.Use @anthropic-ai/sdk with claude-sonnet-5-5, stored   
+  in a single config constant. Use Zod to validate all Claude JSON responses.   
+  Vitest is already installed as the test runner.                               
+
+⏺ Bash(git status --short && git log --oneline -3 && cat package.json && ls &&
+      cat docs/PRD.md | sed -n '1,80p')
+  ⎿  de9245b docs: add product requirements document
+     517ffa2 chore: generate initial CLAUDE.md via /init
+     148ce2e chore: initial project scaffold
+     … +98 lines (ctrl+o to expand)
+
+⏺ Noted. Before the next question, two things don't match what's on disk:
+
+  1. docs/PRD.md hasn't changed. It still lists "User accounts and
+     authentication" under Out of Scope, git shows a clean tree, and the last
+     commit touching it is de9245b. You may not have saved, or it's on another
+     branch. I'll write the CLAUDE.md assuming accounts are in scope, but the
+     PRD needs that edit too or the two files will contradict each other.
+  2. Vitest isn't installed. It's not in package.json (neither are
+     @anthropic-ai/sdk, zod, or @supabase/*), and there's no test script. I'll
+     list these as planned dependencies, not current ones. If you want, I can
+     install them after we finish the CLAUDE.md.
+
+  Question 2 of ~8: architecture
+
+  How should the server-side code be organized? Here's my proposal; correct
+  anything that's off:
+
+  - Claude calls run in Server Actions (not Route Handlers), so the API key and
+    Supabase service logic never reach the client.
+  - Pipeline code lives in plain TypeScript modules under lib/ (e.g.
+    lib/pipeline/experienceSelector.ts, lib/pipeline/resumeRewriter.ts,
+    lib/pipeline/validate.ts). These modules don't import from Next.js, which
+    keeps them easy to unit-test.
+  - Dependency injection: each stage receives the Claude client as a parameter
+    instead of importing a singleton, so tests can pass in a mock. Data-access
+    functions receive the Supabase client the same way.
+  - Validation failures: if a response fails Zod parsing or the no-invention
+    checks, retry once, then show the user an error. Never pass partially valid
+    output through.
+
+  Does that match how you want it, especially the retry policy and Server
+  Actions vs. Route Handlers?
+
+✻ Churned for 11s · done 6:40 PM
+
+❯ Mostly yes, with changes: (1) Server Actions are fine, but every action must  
+  verify the signed-in user first. Selection and rewriting are two separate     
+  actions so the user can adjust the selection in between. (2) Never use the    
+  Supabase service role key for user data; use a server client created from the 
+  user's session so RLS applies. (3) Inject a narrow callClaude(system,         
+  prompt) function instead of the full SDK client. (4) Zod failures retry the   
+  whole call once, then error. No-invention failures retry once with feedback   
+  naming the problem; if it still fails, keep that bullet's original text, flag 
+  it, and keep the other valid rewrites.                                        
+
+⏺ Got it, all four changes recorded. The per-bullet fallback in (4) is a good
+  call: one bad rewrite doesn't throw away the rest of the run.
+
+  Question 3 of ~8: coding conventions
+
+  Here's what I'd propose. Keep, change, or add:
+
+  - TypeScript strict mode, no any. Zod schemas are the single source of truth,
+    and types come from them via z.infer instead of separate interfaces.
+  - Naming: camelCase files for lib/ modules, PascalCase for React components,
+    and named exports only (except the Next.js special files that require
+    default exports, like page.tsx).
+  - Server/client boundary: pages are Server Components by default. "use client"
+    goes only on interactive leaf components (e.g. the side-by-side bullet
+    review), and anything touching the Claude client or the Supabase server
+    client gets import "server-only".
+  - Prompts: system prompts live in their own files (e.g.
+    lib/pipeline/prompts.ts), not inline in the stage logic, so they can be
+    changed and reviewed separately.
+  - Styling: Tailwind utility classes only, with no CSS modules or component
+    library.
+
+  Anything to change? And does your group have a formatter preference, such as
+  Prettier, or just ESLint?
+
+✻ Cogitated for 5s · done 6:41 PM
+
+❯ your plan sounds good                                                         
+
+⏺ Recorded. You didn't mention a formatter, so I'll assume ESLint only, with no
+  Prettier.
+
+  Question 4 of ~8: testing strategy
+
+  You've said TDD unit tests with mocked callClaude and mocked Supabase, kept
+  separate from the eval suite that hits the real API. Some details to pin down:
+
+  1. Layout: unit tests sit next to their source
+     (lib/pipeline/validate.test.ts), and evals go in a top-level evals/ folder.
+     Or would you rather have a single tests/ tree?
+  2. Scripts: npm test runs unit tests only (fast, no network, no API key
+     needed), and a separate npm run eval runs the real-API suite. Should evals
+     ever run in CI, or only manually?
+  3. TDD rule for me: when I implement a feature, I write a failing test first,
+     show it failing, then write the code. Should that apply to everything, or
+     only to lib/ logic (pipeline, validation, data access) and not to UI
+     components?
+  4. Eval fixtures: fictional resumes and job descriptions with human-labeled
+     "must include" IDs, stored as JSON in evals/fixtures/. Is that right, and
+     who labels them: your group, or should I draft the labels for you to
+     review?
+
+✻ Churned for 5s · done 6:42 PM
+
+❯ Yes: colocated unit tests, evals in evals/, and exclude evals/ from the       
+  Vitest config.                                                                
+  npm test runs unit tests only. Evals run manually, never in CI; save each     
+  run's scores to evals/results/ with the date.                                 
+  Strict TDD for everything in lib/ and for the auth check in every Server      
+  Action. No TDD requirement for UI components.                                 
+  Yes to the JSON format. You can draft the fictional resumes and job           
+  descriptions, but my teammate and I will label them independently. Don't      
+  draft labels, since that would make the eval grade your own judgment.         
+
+⏺ All recorded. Agreed on the labels: if I drafted them, the eval would be
+  measuring my own judgment. I'll add an explicit rule that Claude never writes
+  or edits the labels.
+
+  Question 5 of ~8: git conventions
+
+  You mentioned commit message prefixes and no squash merging. The existing
+  history uses chore: and docs:, so I'd propose:
+
+  1. Prefixes: Conventional Commits, with feat:, fix:, test:, refactor:, docs:,
+     chore:, and eval: (for fixture/result changes). Should commits use scopes,
+     like feat(selector): …, or plain prefixes only?
+  2. Branches: never commit directly to main. Use feature branches named like
+     feat/experience-selector, merged by PR. Is that right?
+  3. Merging: regular merge commits, no squash. Is rebasing a branch onto main
+     before merging fine, or should it be merge-only to keep history exactly as
+     written?
+  4. TDD in history: should the failing test and the implementation be separate
+     commits (test: then feat:) so the TDD process is visible, or is one commit
+     per feature fine?
+  5. PRs: does every PR need your teammate's approval before merge, or can
+     either of you self-merge?
+
+✻ Crunched for 5s · done 6:45 PM
+
+❯ Use scopes: feat(selector):, feat(rewriter):, etc. For TDD commits, mark the  
+  step after the colon: test(rewriter): [red] …, feat(rewriter): [green] …,     
+  refactor(rewriter): …. Keep eval: as a custom prefix.                         
+  Correction: committing directly to main is allowed. We're a team of two with  
+  no reviews. Always run git pull --rebase before pushing. Feature branches are 
+  optional for larger features.                                                 
+  If a branch is used, rebasing onto main before merging is fine. Never squash, 
+  and never rebase commits that have already been pushed and pulled by the      
+  other person.                                                                 
+  Always separate commits: a red commit with only the failing test, a green     
+  commit with the minimum implementation, then a refactor commit if needed. A   
+  failing suite on main after a red commit is expected.                         
+  No approval needed. Either of us can self-merge.                              
+
+⏺ Recorded. One consequence of red commits on main: I won't add a pre-commit or
+  pre-push hook that blocks a failing test suite, since it would block your red
+  commits.
+
+  Question 6 of ~7: project-specific do's and don'ts
+
+  Here are rules I'd propose, beyond what the PRD already states. Keep, cut, or
+  add:
+
+  Do
+  - Read node_modules/next/dist/docs/ before using Next.js APIs (already in
+    AGENTS.md, so I'll just reference it).
+  - Keep every Claude call behind callClaude. The model name comes only from the
+    config constant.
+  - Use fictional names in every fixture and test, e.g. "Jordan Rivera at Acme
+    Robotics".
+  - Add a Supabase migration file for every schema change, with RLS policies in
+    the same migration as the table they protect.
+
+  Don't
+  - Never run the eval suite on my own. It costs real API money, so you trigger
+    it.
+  - Never commit .env* files or put keys in code. List required env vars in a
+    committed .env.example instead.
+  - Never weaken a validation check, loosen a Zod schema, or edit an eval
+    fixture just to make a test or eval pass.
+  - Never add a dependency without asking first.
+
+  Also: are you using the Supabase CLI with local migrations
+  (supabase/migrations/), or making schema changes in the Supabase dashboard?
+
+✻ Cooked for 5s · done 6:45 PM
+
+❯ Keep all of these, with changes: (1) Fixture rule: you never edit eval        
+  labels; only my teammate and I do. (2) Add: in a red step, write only the     
+  test; in a green step, never modify the test. (3) Add: every Server Action    
+  verifies the signed-in user first, and never use the Supabase service role    
+  key for user data. (4) Add: never log resume content, job descriptions, or    
+  Claude responses. (5) Also add deny rules to .claude/settings.json for        
+  running evals and reading .env files, so these aren't just instructions.      
+  We're using the Supabase CLI with migrations in supabase/migrations/, applied 
+  to the hosted project with supabase db push.                                  
+
+  Listed 1 directory (ctrl+o to expand)
+
+⏺ Skill(update-config)
+  ⎿  Loaded skill · 1 tool allowed
+
+  Made 1 scratchpad edit +70 (ctrl+o to expand)
+
+⏺ Bash(git diff --no-index --stat CLAUDE.md
+      /private/tmp/claude-501/-Users-stephcarrots-tailorfit/06f99342-bc99-482c-a
+      ac4-e15d951e2e09/scratchpad/CLAUDE.md; git diff -…)
+  ⎿   .../scratchpad/CLAUDE.md                           | 67 +++++++++++++
+     ++++-----
+      1 file changed, 54 insertions(+), 13 deletions(-)
+     … +99 lines (ctrl+o to expand)
+
+⏺ That covers everything, and I haven't written any files yet. The diff above is
+  the proposed CLAUDE.md. Here's what changed beyond your answers:
+  - Removed the npm run start command, the ESLint config details, and the font
+    details. None of them would change how I work.
+  - Imports @docs/PRD.md rather than copying it, as you asked.
+
+  New file, .claude/settings.json:
+  {
+    "permissions": {
+      "deny": [
+        "Bash(npm run eval*)",
+        "Read(./.env)",
+        "Read(./.env.local)",
+        "Read(./.env.*.local)",
+        "Read(./.env.development)",
+        "Read(./.env.production)",
+        "Read(./.env.test)"
+      ]
+    }
+  }
+  - Why the env files are listed by name: a blanket Read(./.env*) would also
+    block .env.example, which I need to edit.
+  - What this doesn't block: these rules stop my Read tool and npm run eval, but
+    not every possible shell command. A command like cat .env.local or calling
+    the eval runner directly would still get through. The CLAUDE.md rules cover
+    those cases; the deny rules are a backstop, not a sandbox.
+
+  .gitignore change: it currently ignores .env*, so a committed .env.example
+  would be ignored too. I'd add !.env.example below that line.
+
+  Still on your side: the PRD on disk still lists user accounts as out of scope
+  (see my earlier note). Please fix it, or tell me to, so it doesn't contradict
+  the CLAUDE.md it's imported into.
+
+  Should I write all three files? I can also commit them as docs: refine 
+  CLAUDE.md via interview and chore: add Claude permission deny rules.
+
+✻ Cogitated for 43s · done 6:47 PM
+
+❯ Yes, with changes. First, update docs/PRD.md: move user accounts into scope,  
+  add user story 8 (sign in with Google so my library is available on any       
+  device), and add the constraint that users can only access their own data via 
+  RLS. Commit that as docs: add user accounts to PRD scope. Then, in            
+  settings.json, keep the deny rules and add allow rules for npm test, npm run  
+  lint, git status, git diff, and git log, plus ask rules for git commit and    
+  git push. Add !.env.example to .gitignore. Then write the files and make two  
+  commits: docs: refine CLAUDE.md via interview, and chore: add Claude          
+  permission rules and unignore .env.example.                                   
+
+⏺ Bash(python3 - <<'EOF'
+      p='docs/PRD.md'…)
+  ⎿  diff --git a/docs/PRD.md b/docs/PRD.md
+     index a9fa895..4543f00 100644
+     --- a/docs/PRD.md
+     … +21 lines (ctrl+o to expand)
+  ⎿  Updated docs/PRD.md +4 -1
+      33     side and accept or edit it, so the final version still sound
+          s like me.
+      34  7. As a job seeker, I want assurance that rewrites never invent
+           skills or numbers
+      35     I didn't provide, so I can stand behind every line in an int
+          erview.
+      36 +8. As a job seeker, I want to sign in with Google, so my librar
+         +y is available                                                 
+      37 +   on any device.                                              
+      38 
+      39  ## Core Pipeline
+      40  1. ExperienceSelector (Claude call #1): takes the experience li
+          brary and job
+     ...
+      49  - The Anthropic API key is used only in server-side code, never
+           in the browser.
+      50  - Rewrites must not add skills, employers, or numbers absent fr
+          om the original.
+      51  - Sample and test data use fictional people, never real resumes
+          .
+      52 +- Users can only access their own data, enforced by Supabase ro
+         +w-level                                                        
+      53 +  security (RLS).                                              
+      54 
+      55  ## Out of Scope
+      52 -- User accounts and authentication                             
+      56  - Exporting to PDF or Word
+      57  - Job search or application tracking
+      58 
+
+⏺ Bash(git add docs/PRD.md && git commit -q -F - <<'EOF'
+      docs: add user accounts to PRD scope…)
+  ⎿  (eval):38: command not found: jq
+     # env files (can opt-in for committing if needed)
+     .env*
+     … +4 lines (ctrl+o to expand)
+  ⎿  Created .claude/settings.json +24
+       1 +{                                                              
+       2 +  "permissions": {                                             
+       3 +    "allow": [                                                 
+       4 +      "Bash(npm test *)",                                      
+       5 +      "Bash(npm run lint *)",                                  
+       6 +      "Bash(git status *)",                                    
+       7 +      "Bash(git diff *)",                                      
+       8 +      "Bash(git log *)"                                        
+       9 +    ],                                                         
+      10 +    "ask": [                                                   
+      11 +      "Bash(git commit *)",                                    
+      12 +      "Bash(git push *)"                                       
+      13 +    ],                                                         
+      14 +    "deny": [                                                  
+      15 +      "Bash(npm run eval*)",                                   
+      16 +      "Read(./.env)",                                          
+      17 +      "Read(./.env.local)",                                    
+      18 +      "Read(./.env.*.local)",                                  
+      19 +      "Read(./.env.development)",                              
+      20 +      "Read(./.env.production)",                               
+      21 +      "Read(./.env.test)"                                      
+      22 +    ]                                                          
+      23 +  }                                                            
+      24 +}                                                              
+  ⎿  Updated .gitignore +1
+      32 
+      33  # env files (can opt-in for committing if needed)
+      34  .env*
+      35 +!.env.example                                                  
+      36 
+      37  # vercel
+      38  .vercel
+  ⎿  Updated CLAUDE.md +54 -13
+       3  This file provides guidance to Claude Code (claude.ai/code) whe
+          n working with code in this repository.
+       4 
+       5  @AGENTS.md
+       6 +@docs/PRD.md                                                   
+       7 
+       8  ## Status
+       9 
+       9 -TailorFit is currently a fresh `create-next-app` scaffold (sing
+         -le commit). `app/page.tsx` is still the template landing page a
+         -nd `app/layout.tsx` still has the default "Create Next App" met
+         -adata — there is no domain code, data layer, or test setup yet.
+      10 +Fresh `create-next-app` scaffold: `app/page.tsx` and `app/layou
+         +t.tsx` are still template code. Planned dependencies are not ye
+         +t installed: `@anthropic-ai/sdk`, `zod`, `@supabase/supabase-js
+         +`, `@supabase/ssr`, `vitest` (plus a `test` script).           
+      11 
+      12  ## Commands
+      13 
+      14  - `npm run dev` — dev server at http://localhost:3000 (Turbopac
+          k)
+      14 -- `npm run build` — production build; also the type-check gate 
+         -(there is no separate `tsc` script)                            
+      15 -- `npm run start` — serve the production build                 
+      16 -- `npm run lint` — ESLint 9 flat config (`eslint-config-next` c
+         -ore-web-vitals + typescript)                                   
+      15 +- `npm run build` — production build; also the type-check gate 
+         +(no separate `tsc` script)                                     
+      16 +- `npm run lint` — ESLint 9 flat config (no Prettier)          
+      17 +- `npm test` — Vitest unit tests only; no network, no API key  
+      18 +- `npm run eval` — real-API eval suite. **Humans only — never r
+         +un it** (denied in `.claude/settings.json`)                    
+      19 +- `supabase db push` — apply `supabase/migrations/` to the host
+         +ed project                                                     
+      20 
+      18 -No test runner is configured.                                  
+      21 +## Stack                                                       
+      22 
+      20 -## Stack and non-default configuration                         
+      23 +- **Next.js 16.4 / React 19.3, App Router** (`app/`, no `src/`)
+         +. APIs differ from older Next.js — read `node_modules/next/dist
+         +/docs/` first.                                                 
+      24 +- **`cacheComponents: true`**: fetching is dynamic by default, 
+         +caching is opt-in via `"use cache"`, uncached dynamic data must
+         + sit under `<Suspense>`. **`partialPrefetching: true`** is also
+         + on.                                                           
+      25 +- **Tailwind CSS v4** via a Turbopack loader rule (no `postcss.
+         +config`/`tailwind.config`); tokens in `app/globals.css` under `
+         +@theme inline`. Utility classes only — no CSS modules or compon
+         +ent library.                                                   
+      26 +- **Supabase**: Google sign-in + hosted Postgres with row-level
+         + security. Schema changes via the Supabase CLI.                
+      27 +- **Claude**: `@anthropic-ai/sdk`, model `claude-sonnet-5-5` de
+         +fined in a single config constant — never hardcode it elsewhere
+         +.                                                              
+      28 +- **Zod** validates every Claude JSON response.                
+      29 +- Pages use generated route types (e.g. `LayoutProps<"/">`) fro
+         +m `.next/types`. Path alias `@/*` → repo root.                 
+      30 
+      22 -- **Next.js 16.4 / React 19.3, App Router only** (`app/` direct
+         -ory, no `src/`). Per AGENTS.md, APIs differ from older Next.js 
+         -— check `node_modules/next/dist/docs/` (`01-app/`, `03-architec
+         -ture/`) before using an unfamiliar API.                        
+      23 -- **`cacheComponents: true`** in `next.config.ts` enables Cache
+         - Components: data fetching is dynamic by default and caching is
+         - opt-in via `"use cache"`; uncached dynamic data must sit under
+         - a `<Suspense>` boundary. Read the caching docs before adding d
+         -ata fetching.                                                  
+      24 -- **`partialPrefetching: true`** is also enabled in `next.confi
+         -g.ts`.                                                         
+      25 -- **Tailwind CSS v4** is wired through a Turbopack loader rule 
+         -(`@tailwindcss/turbopack` on `*.css`) rather than PostCSS — the
+         -re is no `postcss.config` or `tailwind.config`. Theme tokens ar
+         -e defined in `app/globals.css` via `@import "tailwindcss"` and 
+         -`@theme inline` (CSS variables `--background`/`--foreground`, d
+         -ark mode via `prefers-color-scheme`).                          
+      26 -- Layouts/pages use the generated global route types (e.g. `Lay
+         -outProps<"/">` in `app/layout.tsx`) rather than hand-written pr
+         -op types; these come from `.next/types` generated by `next dev`
+         -/`next build`.                                                 
+      27 -- Fonts: Geist / Geist Mono via `next/font/google`, exposed as 
+         -`--font-geist-sans` / `--font-geist-mono`.                     
+     … +40 lines (ctrl+o to expand)
+
+⏺ Bash(python3 -c "import
+      json;json.load(open('.claude/settings.json'));print('json-ok')" && git add
+      .claude/settings.json .gitignore && git commit -q -F - <<'EOF'
+      cho…)  ⎿  json-ok
+     92b2178 chore: add Claude permission rules and unignore .env.example
+     8c892fe docs: refine CLAUDE.md via interview
+     … +2 lines (ctrl+o to expand)
+
+⏺ All three commits are on main, the working tree is clean, and nothing has been
+  pushed.
+
+  92b2178 chore: add Claude permission rules and unignore .env.example
+  8c892fe docs: refine CLAUDE.md via interview
+  e5ff1dc docs: add user accounts to PRD scope
+
+  - docs/PRD.md: user accounts are now in scope, with user story 8 (Google
+    sign-in so your library is available on any device) and the RLS constraint
+    added under Constraints.
+  - CLAUDE.md: the version from the diff, unchanged.
+  - .claude/settings.json: your deny rules, plus allow rules for npm test, npm 
+    run lint, git status, git diff and git log, and ask rules for git commit and
+    git push. I checked that the JSON parses.
+  - .gitignore: !.env.example added. I checked that .env.example is no longer
+    ignored and .env.local still is.
+
+  Two things to know:
+  - The new permission rules probably aren't active in this session yet. The
+    .claude/ folder didn't exist when the session started, so Claude Code may
+    not have loaded the file. Restart the session or open /hooks once to load
+    it.
+  - Next step: the planned dependencies (@anthropic-ai/sdk, zod,
+    @supabase/supabase-js, @supabase/ssr, vitest) still aren't installed, and
+    there's no test script. Per the new "ask before adding any dependency" rule,
+    say the word and I'll install them and set up the Vitest config with evals/
+    excluded.
+
+✻ Worked for 24s · done 6:50 PM
