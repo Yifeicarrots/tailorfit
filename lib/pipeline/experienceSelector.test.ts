@@ -82,4 +82,13 @@ describe("selectExperiences — valid response", () => {
 
     expect(outcome).toEqual({ ok: true, result: ranked });
   });
+
+  it("returns an empty selection when nothing fits, without retrying or padding", async () => {
+    const callClaude = claudeReturns({ selected: [] });
+
+    const outcome = await selectExperiences({ library, jobDescription }, callClaude);
+
+    expect(callClaude).toHaveBeenCalledTimes(1);
+    expect(outcome).toEqual({ ok: true, result: { selected: [] } });
+  });
 });
