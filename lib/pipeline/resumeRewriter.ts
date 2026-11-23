@@ -36,16 +36,35 @@ function parseClaudeRewrite(text: string): ClaudeRewrite | undefined {
   return parsed.success ? parsed.data : undefined;
 }
 
-// Calls Claude up to twice, returning the first response that parses.
+// True when the response has exactly the input's experience and bullet IDs.
+function matchesInput(
+  experiences: Experience[],
+  response: ClaudeRewrite,
+): boolean {
+  const expected = new Set(
+    experiences.flatMap((e) => e.bullets.map((b) => `${e.id}:${b.id}`)),
+  );
+  const received = new Set(
+    response.items.flatMap((i) => i.bullets.map((b) => `${i.id}:${b.id}`)),
+  );
+  return (
+    expected.size === received.size &&
+    [...expected].every((key) => received.has(key))
+  );
+}
+
+// Calls Claude up to twice, returning the first response that parses and
+// matches the input's IDs.
 async function requestRewrite(
   callClaude: CallClaude,
   prompt: string,
+  experiences: Experience[],
 ): Promise<ClaudeRewrite | undefined> {
   for (let attempt = 0; attempt < 2; attempt++) {
     const response = parseClaudeRewrite(
       await callClaude(REWRITER_SYSTEM_PROMPT, prompt),
     );
-    if (response) return response;
+    if (response && matchesInput(experiences, response)) return response;
   }
   return undefined;
 }
@@ -80,6 +99,7 @@ export async function rewriteResume(
   const response = await requestRewrite(
     callClaude,
     buildRewritePrompt(input.experiences, input.jobDescription),
+    input.experiences,
   );
   if (!response) {
     return {
