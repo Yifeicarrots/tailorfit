@@ -144,3 +144,58 @@ describe("rewriteResume — invalid response", () => {
     expect(!outcome.ok && outcome.error).not.toContain("not json");
   });
 });
+
+describe("rewriteResume — IDs that don't match the input", () => {
+  const valid = JSON.stringify(validResponse);
+
+  function withBullets(itemId: string, bullets: { id: string; rewritten: string }[]) {
+    return JSON.stringify({ items: [{ id: itemId, bullets }] });
+  }
+
+  it("retries once when an experience ID is not in the input", async () => {
+    const unknownItem = withBullets("exp-ghost", validResponse.items[0].bullets);
+    const callClaude = claudeReturnsInOrder(unknownItem, valid);
+
+    const outcome = await rewriteResume({ experiences, jobDescription }, callClaude);
+
+    expect(callClaude).toHaveBeenCalledTimes(2);
+    expect(outcome).toMatchObject({ ok: true });
+  });
+
+  it("retries once when a bullet ID is not in the input", async () => {
+    const unknownBullet = withBullets("exp-cafe", [
+      { id: "cafe-1", rewritten: "Handled customer payments during weekend shifts" },
+      { id: "cafe-9", rewritten: "Onboarded 3 new staff members" },
+    ]);
+    const callClaude = claudeReturnsInOrder(unknownBullet, valid);
+
+    const outcome = await rewriteResume({ experiences, jobDescription }, callClaude);
+
+    expect(callClaude).toHaveBeenCalledTimes(2);
+    expect(outcome).toMatchObject({ ok: true });
+  });
+
+  it("retries once when a bullet is missing from the response", async () => {
+    const droppedBullet = withBullets("exp-cafe", [
+      { id: "cafe-1", rewritten: "Handled customer payments during weekend shifts" },
+    ]);
+    const callClaude = claudeReturnsInOrder(droppedBullet, valid);
+
+    const outcome = await rewriteResume({ experiences, jobDescription }, callClaude);
+
+    expect(callClaude).toHaveBeenCalledTimes(2);
+    expect(outcome).toMatchObject({ ok: true });
+  });
+
+  it("returns an error after two responses with mismatched IDs", async () => {
+    const droppedBullet = withBullets("exp-cafe", [
+      { id: "cafe-1", rewritten: "Handled customer payments during weekend shifts" },
+    ]);
+    const callClaude = claudeReturnsInOrder(droppedBullet, droppedBullet);
+
+    const outcome = await rewriteResume({ experiences, jobDescription }, callClaude);
+
+    expect(callClaude).toHaveBeenCalledTimes(2);
+    expect(outcome).toEqual({ ok: false, error: expect.any(String) });
+  });
+});
