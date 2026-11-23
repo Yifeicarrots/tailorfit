@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { initReview, reviewReducer, type ReviewState } from "./bulletReview";
+import {
+  finalBullets,
+  initReview,
+  isComplete,
+  reviewReducer,
+  type ReviewAction,
+  type ReviewState,
+} from "./bulletReview";
 import type { ProvisionalRewriteResult } from "./provisionalRewrite";
 
 const result: ProvisionalRewriteResult = {
@@ -100,5 +107,35 @@ describe("edit", () => {
       status: "edited",
       finalText: "Shipped x",
     });
+  });
+});
+
+function decideAll(): ReviewState {
+  const actions: ReviewAction[] = [
+    { type: "accept", key: "a:0" },
+    { type: "accept", key: "a:1" },
+    { type: "edit", key: "b:0", text: "Led z end to end" },
+  ];
+  return actions.reduce(reviewReducer, initReview(result));
+}
+
+describe("isComplete", () => {
+  it("is false while any bullet is pending", () => {
+    const state = reviewReducer(initReview(result), { type: "accept", key: "a:0" });
+
+    expect(isComplete(state)).toBe(false);
+  });
+
+  it("is true once every bullet is accepted or edited", () => {
+    expect(isComplete(decideAll())).toBe(true);
+  });
+});
+
+describe("finalBullets", () => {
+  it("lists each item's final text in the original order", () => {
+    expect(finalBullets(decideAll())).toEqual([
+      { id: "a", title: "Item A", bullets: ["Delivered x", "Did y"] },
+      { id: "b", title: "Item B", bullets: ["Led z end to end"] },
+    ]);
   });
 });
