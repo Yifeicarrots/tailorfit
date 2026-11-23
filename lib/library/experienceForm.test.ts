@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   addBulletRow,
   emptyForm,
+  experienceFromForm,
   formFromExperience,
   removeBulletRow,
 } from "@/lib/library/experienceForm";
@@ -88,5 +89,47 @@ describe("bullet rows", () => {
   it("never removes the last row", () => {
     const form = emptyForm(fakeNewId());
     expect(removeBulletRow(form, "id-2").bullets).toEqual([{ id: "id-2", text: "" }]);
+  });
+});
+
+describe("experienceFromForm with valid input", () => {
+  it("round-trips a saved item unchanged", () => {
+    expect(experienceFromForm(formFromExperience(experience))).toEqual({
+      ok: true,
+      experience,
+    });
+  });
+
+  it("trims text, drops blank bullet rows, and keeps bullet ids", () => {
+    const form = {
+      ...formFromExperience(experience),
+      title: "  Software Engineering Intern  ",
+      organization: " Maplewood Robotics ",
+      bullets: [
+        { id: "b-1", text: "  Built a dashboard for warehouse robot telemetry " },
+        { id: "blank", text: "   " },
+        { id: "b-2", text: "Cut test suite runtime from 12 to 4 minutes" },
+      ],
+    };
+    expect(experienceFromForm(form)).toEqual({ ok: true, experience });
+  });
+
+  it("turns an empty organization into no value", () => {
+    const result = experienceFromForm({
+      ...formFromExperience(experience),
+      type: "project",
+      organization: "  ",
+    });
+    expect(result.ok).toBe(true);
+    if (result.ok) expect("organization" in result.experience).toBe(false);
+  });
+
+  it("sets endDate to null when Current is ticked, ignoring any end month", () => {
+    const result = experienceFromForm({
+      ...formFromExperience(experience),
+      current: true,
+      endDate: "2025-08",
+    });
+    expect(result).toEqual({ ok: true, experience: { ...experience, endDate: null } });
   });
 });
