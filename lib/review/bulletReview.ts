@@ -6,7 +6,7 @@ export type ReviewBullet = {
   rewritten: string;
   flagged: boolean;
   flagReason?: string;
-  status: "pending" | "accepted";
+  status: "pending" | "accepted" | "edited";
   finalText: string | null;
 };
 
@@ -14,7 +14,9 @@ export type ReviewState = {
   items: { id: string; title: string; bullets: ReviewBullet[] }[];
 };
 
-export type ReviewAction = { type: "accept"; key: string };
+export type ReviewAction =
+  | { type: "accept"; key: string }
+  | { type: "edit"; key: string; text: string };
 
 export function initReview(result: ProvisionalRewriteResult): ReviewState {
   return {
@@ -39,13 +41,15 @@ export function reviewReducer(
     items: state.items.map((item) => ({
       ...item,
       bullets: item.bullets.map((b) =>
-        b.key === action.key
-          ? {
-              ...b,
-              status: "accepted",
-              finalText: b.flagged ? b.original : b.rewritten,
-            }
-          : b,
+        b.key !== action.key
+          ? b
+          : action.type === "edit"
+            ? { ...b, status: "edited", finalText: action.text }
+            : {
+                ...b,
+                status: "accepted",
+                finalText: b.flagged ? b.original : b.rewritten,
+              },
       ),
     })),
   };
