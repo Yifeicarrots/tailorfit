@@ -67,8 +67,15 @@ export function checkSelectionIds(
   library: Experience[],
 ): SelectionIdsResult {
   const libraryIds = new Set(library.map((e) => e.id));
-  const problems = selection.selected
-    .filter((pick) => !libraryIds.has(pick.id))
-    .map((pick) => `Selected ID "${pick.id}" is not in the library`);
+  const seen = new Set<string>();
+  const problems: string[] = [];
+  for (const pick of selection.selected) {
+    if (!libraryIds.has(pick.id)) {
+      problems.push(`Selected ID "${pick.id}" is not in the library`);
+    } else if (seen.has(pick.id)) {
+      problems.push(`Selected ID "${pick.id}" appears more than once`);
+    }
+    seen.add(pick.id);
+  }
   return problems.length === 0 ? { ok: true } : { ok: false, problems };
 }
