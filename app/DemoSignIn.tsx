@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState, useSyncExternalStore, type FormEvent } from "react";
 import { browserStore } from "@/lib/storage/browserStore";
 import {
@@ -66,7 +67,10 @@ export function DemoSignIn() {
             ? "Your library is empty."
             : `Your library has ${libraryCount} saved ${libraryCount === 1 ? "item" : "items"}.`}
         </p>
-        <div>
+        <div className="flex gap-2">
+          <Link href="/library" className={buttonClass}>
+            Manage your library
+          </Link>
           <button
             type="button"
             onClick={handleSignOut}
