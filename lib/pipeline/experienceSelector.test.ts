@@ -135,3 +135,19 @@ describe("selectExperiences — invalid response", () => {
     expect(!outcome.ok && outcome.error).not.toContain("not json");
   });
 });
+
+describe("selectExperiences — IDs that aren't in the library", () => {
+  const valid = JSON.stringify(validResponse);
+
+  it("retries the whole call once when an ID is not in the library", async () => {
+    const unknownId = JSON.stringify({
+      selected: [{ id: "exp-ghost", reason: "Sounds relevant" }],
+    });
+    const callClaude = claudeReturnsInOrder(unknownId, valid);
+
+    const outcome = await selectExperiences({ library, jobDescription }, callClaude);
+
+    expect(callClaude).toHaveBeenCalledTimes(2);
+    expect(outcome).toEqual({ ok: true, result: validResponse });
+  });
+});
