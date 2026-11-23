@@ -1,4 +1,4 @@
-import type { Experience } from "@/lib/types";
+import type { Experience, ExperienceLibrary } from "@/lib/types";
 
 export const REWRITER_SYSTEM_PROMPT = `You rewrite resume bullet points so they read as relevant to a specific job description.
 
@@ -44,4 +44,36 @@ export function buildRewriteRetryPrompt(
 Your previous rewrites of these bullets added content that is not in the original bullet. Rewrite them again without adding it.
 ${lines.join("\n")}
 </feedback>`;
+}
+
+export const SELECTOR_SYSTEM_PROMPT = `You choose which of a job seeker's experiences and projects best fit a specific job description.
+
+Rules:
+- Choose only items from the list you are given, using their exact ids.
+- Choose each item at most once.
+- Give a short reason for each choice that points to what in the job description it fits.
+
+Respond with only JSON in this shape, and nothing else:
+{"selected":[{"id":"<experience id>","reason":"<why it fits>"}]}`;
+
+export function buildSelectionPrompt(
+  library: ExperienceLibrary,
+  jobDescription: string,
+): string {
+  const items = library.map((e) => ({
+    id: e.id,
+    type: e.type,
+    title: e.title,
+    organization: e.organization,
+    startDate: e.startDate,
+    endDate: e.endDate,
+    bullets: e.bullets.map((b) => b.text),
+  }));
+  return `<job_description>
+${jobDescription}
+</job_description>
+
+<experiences>
+${JSON.stringify(items, null, 2)}
+</experiences>`;
 }
