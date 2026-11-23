@@ -36,6 +36,13 @@ export function loadLibrary(store: KeyValueStore): ExperienceLibrary {
   return readJson(store, LIBRARY_KEY, experienceLibrarySchema, []);
 }
 
+export function loadLibraryWithBackup(store: KeyValueStore): {
+  library: ExperienceLibrary;
+  backedUp: boolean;
+} {
+  return { library: loadLibrary(store), backedUp: false };
+}
+
 export function saveUserName(store: KeyValueStore, name: string): void {
   store.setItem(USER_NAME_KEY, JSON.stringify(name));
 }
