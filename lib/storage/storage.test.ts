@@ -60,4 +60,11 @@ describe("experience library storage", () => {
     store.data.set("tailorfit:library", "{not valid json");
     expect(loadLibrary(store)).toEqual([]);
   });
+
+  it("returns an empty library instead of throwing when data fails the schema", () => {
+    const store = fakeStore();
+    const noBullets = [{ ...library[0], bullets: [] }];
+    store.data.set("tailorfit:library", JSON.stringify(noBullets));
+    expect(loadLibrary(store)).toEqual([]);
+  });
 });
