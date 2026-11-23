@@ -43,6 +43,7 @@ Fresh `create-next-app` scaffold: `app/page.tsx` and `app/layout.tsx` are still 
 ## Conventions
 
 - TypeScript strict, no `any`. Zod schemas are the source of truth; derive types with `z.infer`.
+- The Zod schemas in `lib/types.ts` (experience, selection result, rewrite result) are shared contracts between the two teammates. Never change them without asking first.
 - `camelCase` files in `lib/`, `PascalCase` React components, named exports only (except Next.js special files).
 - Server Components by default; `"use client"` only on interactive leaves. Modules touching Claude import `"server-only"`. `lib/storage/` is browser-only and must never be imported by server code.
 - Never log resume content, job descriptions, or Claude responses.
