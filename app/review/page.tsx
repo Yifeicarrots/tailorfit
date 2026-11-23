@@ -1,4 +1,4 @@
-import { sampleRewrite } from "@/lib/review/sampleRewrite";
+import { sampleExperiences, sampleRewrite } from "@/lib/review/sampleRewrite";
 import { BulletComparison } from "./BulletComparison";
 
 // Uses fixture data until the rewriter's Server Action exists (#6).
@@ -12,7 +12,10 @@ export default function ReviewPage() {
           so it still sounds like you.
         </p>
       </header>
-      <BulletComparison result={sampleRewrite} />
+      <BulletComparison
+        result={sampleRewrite}
+        experiences={sampleExperiences}
+      />
     </main>
   );
 }

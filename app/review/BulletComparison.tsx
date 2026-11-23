@@ -8,7 +8,7 @@ import {
   reviewReducer,
   type ReviewBullet,
 } from "@/lib/review/bulletReview";
-import type { ProvisionalRewriteResult } from "@/lib/review/provisionalRewrite";
+import type { Experience, RewriteResult } from "@/lib/types";
 
 const statusStyles: Record<ReviewBullet["status"], string> = {
   pending: "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300",
@@ -22,10 +22,14 @@ const buttonClass =
 
 export function BulletComparison({
   result,
+  experiences,
 }: {
-  result: ProvisionalRewriteResult;
+  result: RewriteResult;
+  experiences: Experience[];
 }) {
-  const [state, dispatch] = useReducer(reviewReducer, result, initReview);
+  const [state, dispatch] = useReducer(reviewReducer, null, () =>
+    initReview(result, experiences),
+  );
   const [editing, setEditing] = useState<{ key: string; text: string } | null>(
     null,
   );
@@ -48,7 +52,14 @@ export function BulletComparison({
 
       {state.items.map((item) => (
         <section key={item.id} className="flex flex-col gap-3">
-          <h2 className="text-lg font-semibold">{item.title}</h2>
+          <h2 className="text-lg font-semibold">
+            {item.title}
+            {item.organization && (
+              <span className="font-normal text-zinc-600 dark:text-zinc-400">
+                , {item.organization}
+              </span>
+            )}
+          </h2>
 
           <div className="hidden grid-cols-2 gap-4 px-4 text-xs font-medium uppercase tracking-wide text-zinc-500 sm:grid">
             <span>Original</span>
