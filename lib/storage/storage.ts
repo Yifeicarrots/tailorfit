@@ -11,5 +11,9 @@ export function saveLibrary(store: KeyValueStore, library: ExperienceLibrary): v
 export function loadLibrary(store: KeyValueStore): ExperienceLibrary {
   const raw = store.getItem(LIBRARY_KEY);
   if (raw === null) return [];
-  return JSON.parse(raw) as ExperienceLibrary;
+  try {
+    return JSON.parse(raw) as ExperienceLibrary;
+  } catch {
+    return [];
+  }
 }
