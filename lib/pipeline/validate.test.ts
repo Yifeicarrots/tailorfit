@@ -169,4 +169,18 @@ describe("checkSelectionIds", () => {
     expect(check.ok).toBe(false);
     expect(!check.ok && check.problems.join(" ")).toContain("exp-ghost");
   });
+
+  it("rejects a duplicate ID", () => {
+    const selection = {
+      selected: [
+        { id: "exp-cafe", reason: "Shows customer service" },
+        { id: "exp-cafe", reason: "Shows payments" },
+      ],
+    };
+
+    const check = checkSelectionIds(selection, library);
+
+    expect(check.ok).toBe(false);
+    expect(!check.ok && check.problems.join(" ")).toContain("exp-cafe");
+  });
 });
