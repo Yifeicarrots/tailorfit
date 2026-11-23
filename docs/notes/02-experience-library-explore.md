@@ -42,6 +42,29 @@ From `gh issue view 2` (story 1, depends on #1, which is closed):
 - **Fixtures**: fictional people and employers only (e.g. "Maplewood Robotics", "Avery Quinn").
 - **Commits**: scope `library`, Conventional Commits, `git pull --rebase` before pushing.
 
+## Decisions
+
+Answers to the open questions and risks below, decided by Yanni on 2026-11-22.
+
+### Open questions
+
+1. **Route**: the library gets its own `/library` route.
+2. **Sign-in gate**: signed-out users see "Please sign in first" with a link to the home page.
+3. **IDs**: `crypto.randomUUID()`, passed into `lib/` code as an argument so tests can use stable IDs. Existing bullet IDs stay the same when an item is edited.
+4. **Bullets**: a list of bullet inputs with add and remove buttons (not one textarea).
+5. **Dates**: a month picker (`<input type="month">`) plus a "Current" checkbox that sets `endDate` to `null`.
+6. **Empty organization**: becomes no value (`undefined`), not `""`.
+7. **Errors**: plain-language messages under each field. The wording lives in the form layer, not in `lib/types.ts`.
+8. **Delete**: confirm first with the browser's `confirm()` dialog.
+9. **Order**: sorted by start date, newest first, with current items (`endDate: null`) on top.
+
+### Risks
+
+- **Re-render loop**: load the library into state once after mount, rather than using `loadLibrary` as a `useSyncExternalStore` snapshot.
+- **Silent data loss**: if stored library data fails validation, copy the raw text to a backup key before any save can overwrite it, and show the user a warning. This is a TDD cycle in `lib/storage/`.
+- **Same-tab updates between components**: skip the shared listener. Known limitation: `DemoSignIn`'s library count and the library screen don't notify each other within one tab. That's acceptable while they're on different routes.
+- **Shared schema**: extra form rules (friendlier messages, end ≥ start, etc.) stay out of `lib/types.ts`.
+
 ## Open questions
 
 1. **Where does the library live?** A new route (e.g. `/library`) linked from the signed-in home screen, or on the home page itself? A route keeps `DemoSignIn` small.
