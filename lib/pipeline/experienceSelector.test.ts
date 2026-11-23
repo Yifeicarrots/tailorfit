@@ -55,4 +55,13 @@ describe("selectExperiences — prompt", () => {
       }
     }
   });
+
+  it("tells Claude an empty selection is allowed, so it doesn't pad the list", async () => {
+    const callClaude = claudeReturns(validResponse);
+
+    await selectExperiences({ library, jobDescription }, callClaude);
+
+    const [system] = callClaude.mock.calls[0];
+    expect(system).toContain('{"selected":[]}');
+  });
 });
