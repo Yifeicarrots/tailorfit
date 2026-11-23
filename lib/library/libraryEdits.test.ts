@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { addItem, deleteItem, updateItem } from "@/lib/library/libraryEdits";
+import {
+  addItem,
+  deleteItem,
+  sortLibrary,
+  updateItem,
+} from "@/lib/library/libraryEdits";
 import type { Experience, ExperienceLibrary } from "@/lib/types";
 
 // Fictional person.
@@ -41,5 +46,29 @@ describe("updateItem", () => {
 describe("deleteItem", () => {
   it("removes the item with the given id", () => {
     expect(deleteItem([item("a"), item("b")], "a")).toEqual([item("b")]);
+  });
+});
+
+describe("sortLibrary", () => {
+  it("puts current items first, then sorts by start date, newest first", () => {
+    const old = item("old", { startDate: "2022-01", endDate: "2022-05" });
+    const recent = item("recent", { startDate: "2025-06", endDate: "2025-08" });
+    const currentOld = item("currentOld", { startDate: "2021-09", endDate: null });
+    const currentNew = item("currentNew", { startDate: "2024-01", endDate: null });
+    const sorted = sortLibrary([old, currentOld, recent, currentNew]);
+    expect(sorted.map((i) => i.id)).toEqual([
+      "currentNew",
+      "currentOld",
+      "recent",
+      "old",
+    ]);
+  });
+
+  it("keeps the saved order for ties and doesn't change the input", () => {
+    const first = item("first");
+    const second = item("second");
+    const library = [first, second];
+    expect(sortLibrary(library).map((i) => i.id)).toEqual(["first", "second"]);
+    expect(sortLibrary(library)).not.toBe(library);
   });
 });
