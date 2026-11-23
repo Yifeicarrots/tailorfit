@@ -24,7 +24,8 @@ export async function selectExperiences(
     } catch {
       continue;
     }
-    return { ok: true, result: selectionResultSchema.parse(json) };
+    const parsed = selectionResultSchema.safeParse(json);
+    if (parsed.success) return { ok: true, result: parsed.data };
   }
   return { ok: false, error: "Claude returned an invalid selection response twice" };
 }
