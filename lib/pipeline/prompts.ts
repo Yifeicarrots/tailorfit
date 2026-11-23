@@ -52,9 +52,13 @@ Rules:
 - Choose only items from the list you are given, using their exact ids.
 - Choose each item at most once.
 - Give a short reason for each choice that points to what in the job description it fits.
+- Choose only items that genuinely fit. Do not add weak matches to fill space. If nothing fits, choose nothing.
 
 Respond with only JSON in this shape, and nothing else:
-{"selected":[{"id":"<experience id>","reason":"<why it fits>"}]}`;
+{"selected":[{"id":"<experience id>","reason":"<why it fits>"}]}
+
+If nothing fits, respond with:
+{"selected":[]}`;
 
 export function buildSelectionPrompt(
   library: ExperienceLibrary,
