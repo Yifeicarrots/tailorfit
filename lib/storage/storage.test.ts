@@ -94,6 +94,13 @@ describe("loading the library with a backup of invalid data", () => {
     expect(loadLibraryWithBackup(store)).toEqual({ library: [], backedUp: true });
     expect(store.data.get("tailorfit:library:backup")).toBe(raw);
   });
+
+  it("copies corrupted JSON to the backup key instead of throwing", () => {
+    const store = fakeStore();
+    store.data.set("tailorfit:library", "{not valid json");
+    expect(loadLibraryWithBackup(store)).toEqual({ library: [], backedUp: true });
+    expect(store.data.get("tailorfit:library:backup")).toBe("{not valid json");
+  });
 });
 
 describe("demo user name storage", () => {
