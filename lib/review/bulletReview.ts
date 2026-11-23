@@ -1,7 +1,8 @@
-import type { ProvisionalRewriteResult } from "./provisionalRewrite";
+import type { Experience, RewriteResult } from "@/lib/types";
 
 export type ReviewBullet = {
   key: string;
+  id: string;
   original: string;
   rewritten: string;
   flagged: boolean;
@@ -11,25 +12,40 @@ export type ReviewBullet = {
 };
 
 export type ReviewState = {
-  items: { id: string; title: string; bullets: ReviewBullet[] }[];
+  items: {
+    id: string;
+    title: string;
+    organization?: string;
+    bullets: ReviewBullet[];
+  }[];
 };
 
 export type ReviewAction =
   | { type: "accept"; key: string }
   | { type: "edit"; key: string; text: string };
 
-export function initReview(result: ProvisionalRewriteResult): ReviewState {
+export function initReview(
+  result: RewriteResult,
+  experiences: Experience[],
+): ReviewState {
   return {
-    items: result.items.map((item) => ({
-      id: item.id,
-      title: item.title,
-      bullets: item.bullets.map((b, i) => ({
-        ...b,
-        key: `${item.id}:${i}`,
-        status: "pending",
-        finalText: null,
-      })),
-    })),
+    items: result.items.map((item) => {
+      const experience = experiences.find((e) => e.id === item.id);
+      if (!experience) {
+        throw new Error(`Unknown experience ID "${item.id}"`);
+      }
+      return {
+        id: item.id,
+        title: experience.title,
+        organization: experience.organization,
+        bullets: item.bullets.map((b) => ({
+          ...b,
+          key: `${item.id}:${b.id}`,
+          status: "pending",
+          finalText: null,
+        })),
+      };
+    }),
   };
 }
 
