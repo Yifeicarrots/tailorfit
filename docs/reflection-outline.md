@@ -4,7 +4,8 @@ The final reflection should be 1–2 pages, about 600–900 words. The **Facts**
 
 Evidence to point the reader to:
 - `docs/session-logs/01-claude-md-interview.txt` (Yanni: `/init` refined through an interview)
-- `docs/session-logs/02-tdd-and-plan-mode.txt` (annotated: TDD, plan mode, permissions)
+- `docs/session-logs/02-shared-schemas-and-callclaude.txt` and `03-storage-and-demo-sign-in.txt` (Yanni: #1, TDD on schemas, callClaude, storage)
+- `docs/session-logs/04-tdd-and-plan-mode.txt` (annotated: TDD, plan mode, permissions)
 - `docs/plans/2026-11-22-bullet-comparison.md` (the approved plan)
 - `git log`
 
@@ -52,17 +53,17 @@ Evidence to point the reader to:
 ## 4. Context management: what worked best (about half a page)
 
 **Facts:**
-- **CLAUDE.md with `@imports`** (`@AGENTS.md`, `@docs/PRD.md`). Log 02 opens with a one-paragraph prompt and no explanation of the stack or rules, yet Claude followed the TDD commit format, the `pull --rebase` rule and the dependency rule.
+- **CLAUDE.md with `@imports`** (`@AGENTS.md`, `@docs/PRD.md`). Log 04 opens with a one-paragraph prompt and no explanation of the stack or rules, yet Claude followed the TDD commit format, the `pull --rebase` rule and the dependency rule.
 - **`/init`, then an interview** (`517ffa2` → `8c892fe`). The generated file had 3 sections (Status, Commands, Stack). The refined one has 7, adding Architecture, Conventions, Testing and Git: 54 lines added and 13 removed.
 - **`/clear`** at the start of log 01 gave the CLAUDE.md interview a clean context.
-- **`/compact`** was run after exporting log 02. It kept a summary of the session and let the same thread continue with the next task (annotating that log). Worth checking: what did the summary keep, and what did it lose?
+- **`/compact`** was run after exporting log 04. It kept a summary of the session and let the same thread continue with the next task (annotating that log). Worth checking: what did the summary keep, and what did it lose?
 - **`--continue`**: *not yet used. Do this next session (`claude --continue`) and note what it restored.*
 - **Durable context on disk that survives `/clear` and `/compact`:**
   - the committed plan file
   - CLAUDE.md's Status section, updated at the end of #7
   - comments on the GitHub issues
 - **Issues as context boundaries.** One issue per session kept each conversation focused.
-- **Permissions as context.** The `deny` rules (`npm run eval`, `.env*`) mean you don't have to repeat "don't do X" in every session. Separately, the auto-mode classifier blocked a port-kill command, and Claude chose a safer approach (log 02, `[PERMISSIONS]`).
+- **Permissions as context.** The `deny` rules (`npm run eval`, `.env*`) mean you don't have to repeat "don't do X" in every session. Separately, the auto-mode classifier blocked a port-kill command, and Claude chose a safer approach (log 04, `[PERMISSIONS]`).
 
 **Your take:**
 - Rank the strategies by how much they actually helped. Which would you set up first on a new project?

@@ -1,9 +1,10 @@
 ================================================================================
-ANNOTATED SESSION LOG 02: TDD (Part 3) and Explore -> Plan -> Implement ->
+ANNOTATED SESSION LOG 04: TDD (Part 3) and Explore -> Plan -> Implement ->
 Commit (Part 2)
 TailorFit, issues #6 (no-invention check) and #7 (bullet comparison screen)
 Session date: 2026-11-22, about 7:55-8:17 PM. Exported with
-/export docs/session-logs/02-tdd-and-plan-mode.txt
+/export docs/session-logs/02-tdd-and-plan-mode.txt, then renamed to 04 because
+Yanni's logs took 02 and 03.
 ================================================================================
 
 HOW TO READ THIS
