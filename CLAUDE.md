@@ -37,6 +37,7 @@ Fresh `create-next-app` scaffold: `app/page.tsx` and `app/layout.tsx` are still 
 - **Dependency injection**: stages receive a narrow `callClaude(system, prompt)` function, never the SDK client. Code that persists data receives the storage functions the same way, never `localStorage` itself.
 - **Validation failures**:
   - Zod/JSON failure → retry the whole call once, then return an error.
+  - Unknown ID (an ID in a Claude response that isn't in the input, e.g. the selector picks an item not in the library) → handled like a Zod/JSON failure: retry the whole call once, then return an error.
   - No-invention failure → retry once with feedback naming the problem. If it still fails, keep that bullet's original text, flag it, and keep the other valid rewrites.
 
 ## Conventions
