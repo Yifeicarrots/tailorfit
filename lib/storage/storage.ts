@@ -9,8 +9,23 @@ const USER_NAME_KEY = "tailorfit:userName";
 
 const userNameSchema = z.string().min(1);
 
-// Reads a JSON value and validates it; missing, corrupted, or invalid data
-// returns the fallback instead of throwing.
+// Parses and validates a stored string; corrupted or invalid data returns
+// { ok: false } instead of throwing.
+function parseJson<T>(
+  raw: string,
+  schema: z.ZodType<T>,
+): { ok: true; value: T } | { ok: false } {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    return { ok: false };
+  }
+  const result = schema.safeParse(parsed);
+  return result.success ? { ok: true, value: result.data } : { ok: false };
+}
+
+// Missing, corrupted, or invalid data returns the fallback.
 function readJson<T>(
   store: KeyValueStore,
   key: string,
@@ -19,14 +34,8 @@ function readJson<T>(
 ): T {
   const raw = store.getItem(key);
   if (raw === null) return fallback;
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(raw);
-  } catch {
-    return fallback;
-  }
-  const result = schema.safeParse(parsed);
-  return result.success ? result.data : fallback;
+  const result = parseJson(raw, schema);
+  return result.ok ? result.value : fallback;
 }
 
 export function saveLibrary(store: KeyValueStore, library: ExperienceLibrary): void {
@@ -43,14 +52,9 @@ export function loadLibraryWithBackup(store: KeyValueStore): {
 } {
   const raw = store.getItem(LIBRARY_KEY);
   if (raw === null) return { library: [], backedUp: false };
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(raw);
-  } catch {
-    parsed = undefined;
-  }
-  const result = experienceLibrarySchema.safeParse(parsed);
-  if (result.success) return { library: result.data, backedUp: false };
+  const result = parseJson(raw, experienceLibrarySchema);
+  if (result.ok) return { library: result.value, backedUp: false };
+  // Keep the unreadable data so the next save can't destroy it.
   store.setItem(LIBRARY_BACKUP_KEY, raw);
   return { library: [], backedUp: true };
 }
