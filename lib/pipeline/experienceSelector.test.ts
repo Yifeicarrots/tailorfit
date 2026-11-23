@@ -111,4 +111,17 @@ describe("selectExperiences — invalid response", () => {
     expect(callClaude.mock.calls[1]).toEqual(callClaude.mock.calls[0]);
     expect(outcome).toEqual({ ok: true, result: validResponse });
   });
+
+  it.each([
+    ["a pick has no reason", { selected: [{ id: "exp-cafe" }] }],
+    ["a pick has an empty reason", { selected: [{ id: "exp-cafe", reason: "" }] }],
+    ["the selected list is missing", { picks: [] }],
+  ])("retries the whole call once when %s", async (_case, invalid) => {
+    const callClaude = claudeReturnsInOrder(JSON.stringify(invalid), valid);
+
+    const outcome = await selectExperiences({ library, jobDescription }, callClaude);
+
+    expect(callClaude).toHaveBeenCalledTimes(2);
+    expect(outcome).toEqual({ ok: true, result: validResponse });
+  });
 });
