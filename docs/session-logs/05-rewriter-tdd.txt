@@ -1,0 +1,3473 @@
+================================================================================
+ANNOTATED SESSION LOG 05: /compact, syncing with a teammate, and the rewriter
+built with strict TDD (Part 3), plus the #7 switch to shared types
+TailorFit, issues #6 (resume rewriter) and #7 (bullet comparison screen)
+Session date: 2026-11-22, about 8:17-10:36 PM, the same session as log 04
+after /compact. Exported with /export docs/session-logs/05-rewriter-tdd.txt
+================================================================================
+
+HOW TO READ THIS
+Everything below is the raw /export output, unchanged. Lines starting with
+">>>" are annotations added afterwards. Search for ">>> [" to jump between
+them.
+
+/export writes the whole conversation, including the part before /compact.
+Lines up to the "/compact" prompt repeat session log 04, which is already
+annotated, so the notes here start at /compact.
+
+"Ran N shell commands (ctrl+o to expand)" means the export collapsed those
+commands. Where a collapsed command matters (test runs, commits), the
+annotation gives the commit hash so you can check it in `git log`.
+
+TAGS
+  [CONTEXT]     how context was loaded or managed
+  [IMPLEMENT]   design choices and implementation steps
+  [COMMIT]      a commit or push (hash given)
+  [RED]         failing test written first and seen to fail
+  [GREEN]       minimum code to pass; the test is not modified
+  [REFACTOR]    cleanup with the tests still green
+  [HUMAN]       a decision or action by the person, not by Claude
+  [PERMISSIONS] the permission rules or project rules shaping a step
+  [VERIFY]      checking the result (tests, lint, build, browser)
+
+TIMELINE (the commits made after /compact, in order)
+  Housekeeping:
+    f4ad1a3 docs       annotate session log, add reflection outline
+    40e94d3 docs       renumber my log to 04 after Yanni's 02 and 03
+  #7, switch from the provisional type to the shared RewriteResult:
+    d7665fb [red]      build review state from RewriteResult + experiences
+    2d9dfb6 [green]
+    9c5da05 refactor   screen and fixture on the shared types
+  #6, resume rewriter (lib/pipeline/resumeRewriter.ts), four TDD cycles:
+    296c4e0 [red]      one valid response -> every bullet rewritten
+    4904966 [green]
+    c809f9a [red]      invalid JSON or schema -> retry once, then error
+    7e59974 [green]
+    a9e9e9b refactor   split parsing, retry, and result building
+    8c43268 [red]      unknown or missing IDs -> retry once, then error
+    c4850f0 [green]
+    606f3c3 refactor   share bullet keys
+    441e583 [red]      invented content -> retry with feedback, else flag
+    860dbfa [green]
+    8fa1c75 refactor   split the no-invention retry into helpers
+================================================================================
+
+▗ ▗   ▖ ▖  Claude Code v2.1.308
+           Opus 5.5 · Claude Enterprise
+ ▘▘   ▝▝   ~/Documents/AI Coding Course/tailorfit
+
+⚠ Your login expires in 2 days · run /login to renew
+
+
+>>> [CONTEXT] Lines from here to the "/compact" prompt repeat session log 04,
+>>> which has its own annotations. Skip ahead to the first ">>>" after this one
+>>> for the new material.
+
+❯ Yanni and I are pair-building TailorFit for the P3 Claude Code workflow       
+  assignment. Yanni owns #1, #2, #3, #5. I'm taking #6 (rewriter, Part 3 TDD)   
+  and #7 (comparison screen, Part 2), maybe #4. #1 (lib/types.ts) isn't merged  
+  yet. Assign #6 and #7 to me, then start the strict TDD on the no-invention    
+  check in lib/pipeline/validate.ts (red commit first)........                  
+  Please complete this in pairs                                                 
+                                                                                
+  Objective                                                                     
+  Demonstrate mastery of the Claude Code development workflow by setting up a   
+  project, using the Explore→Plan→Implement→Commit pattern, and doing TDD       
+  through Claude Code.                                                          
+                                                                                
+  Part 1: Claude Code Project Setup (25%)                                       
+  Set up Claude Code for your P3 project:                                       
+                                                                                
+  Write a comprehensive CLAUDE.md (project context, stack, conventions,         
+  do's/don'ts)                                                                  
+  Configure permissions (allowlists or sandboxing)                              
+  Demonstrate /init output and iterate on CLAUDE.md based on it                 
+  Show context management strategy (/clear, /compact, --continue)               
+  Requirements: CLAUDE.md must include: tech stack, architecture decisions,     
+  coding conventions, testing strategy, and project-specific do's/don'ts. At    
+  least one @import reference to additional context (e.g., PRD, API docs).      
+                                                                                
+  Part 2: Explore → Plan → Implement → Commit (30%)                             
+  Use Claude Code's recommended 4-phase workflow on a real P3 feature:          
+                                                                                
+  Explore: Use Glob, Grep, Read to understand existing code                     
+  Plan: Use Plan mode to design the approach                                    
+  Implement: Execute the plan with Claude Code                                  
+  Commit: Create clean commits with meaningful messages                         
+  Requirements: Git history must clearly show this workflow. At least 3 commits 
+  demonstrating the pattern.                                                    
+                                                                                
+  Part 3: TDD with Claude Code (30%)                                            
+  Build a P3 feature using strict TDD through Claude Code:                      
+                                                                                
+  Write failing tests first                                                     
+  Have Claude Code implement minimum code to pass                               
+  Refactor                                                                      
+  Repeat for all acceptance criteria                                            
+  Requirements: Tests written BEFORE implementation. Git history shows          
+  red-green-refactor commits. Clear commit messages showing TDD process.        
+                                                                                
+  Part 4: Reflection (15%)                                                      
+  Write a 1-2 page reflection answering:                                        
+                                                                                
+  How does the Explore→Plan→Implement→Commit workflow compare to your previous  
+  approach?                                                                     
+  What context management strategies worked best?                               
+  Include annotated Claude Code session log showing your workflow               
+  Deliverables                                                                  
+  P3 repository with CLAUDE.md and permissions configuration                    
+  Feature code with TDD git history (red-green-refactor commits)                
+  Annotated Claude Code session log                                             
+  Reflection document (1-2 pages)                                               
+  Rubric (50 points)                                                            
+  Criterion    Weight                                                           
+  CLAUDE.md & project setup    25%                                              
+  Explore→Plan→Implement→Commit workflow    30%                                 
+  TDD process through Claude Code    30%                                        
+  Reflection & session log    15%                                               
+  ....... The above is the homework requirement.                                
+
+⏺ Skill(superpowers:test-driven-development)
+  ⎿  Successfully loaded skill
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+⏺ Assigning #6 and #7 to you:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ The no-invention check will run on plain strings, so it doesn't depend on the
+  unmerged schemas in lib/types.ts. I'll start with a test for invented numbers,
+  one behavior per red/green cycle.
+
+⏺ Write(lib/pipeline/validate.test.ts)
+  ⎿  Wrote 46 lines to lib/pipeline/validate.test.ts
+      1 import { describe, expect, it } from "vitest";
+      2 import { checkNoInvention } from "./validate";
+      3 
+      4 describe("checkNoInvention — numbers", () => {
+      5   it("accepts a rewrite that adds no numbers", () => {
+      6     const result = checkNoInvention(
+      7       "Built a dashboard for the campus food bank",
+      8       "Developed an inventory dashboard for a campus food bank",
+      9     );
+     … +37 lines (ctrl+o to expand)
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+⏺ node_modules is missing (the deps are in package.json and the lockfile but
+  were never installed in this checkout). npm ci installs exactly what the
+  lockfile records, with nothing new added:
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+⏺ The lockfile is slightly out of sync with package.json (missing optional
+  @emnapi/* entries), so I'll install with --no-save to leave it unchanged.
+  Whether to fix the lockfile is a decision for you and Yanni.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ It fails the right way: validate.ts doesn't exist yet, and the lockfile is
+  unchanged. Committing the red step:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ I assigned #6 and #7 to you and made the first red commit, d645537 
+  test(rewriter): [red] no-invention check rejects invented numbers. It's
+  committed locally but not pushed.
+
+  What the test covers (lib/pipeline/validate.test.ts):
+  checkNoInvention(original, rewritten) returns { ok: true } or { ok: false, 
+  problems: string[] }. The four cases are:
+  - a rewrite with no numbers passes
+  - a rewrite that reuses the original's numbers passes
+  - an invented 40% is rejected, and the problem message names it
+  - every invented number gets named, not just the first (3, 150)
+
+  Red result: the suite fails because ./validate doesn't exist yet. The
+  placeholder test still passes.
+
+  Why plain strings: the check takes two strings instead of the schemas from #1,
+  so it doesn't wait on Yanni's merge. The list of problems is also what the
+  "retry with feedback naming the problem" step will need.
+
+  Two things you should know:
+  1. node_modules wasn't installed, and package-lock.json is out of sync with 
+     package.json. It's missing some @emnapi/* packages that the installed ones
+     depend on, so npm ci fails. I installed with npm install --no-save so the
+     shared lockfile stayed the same. One of you should run npm install and
+     commit the updated lockfile as a chore: commit. Coordinate with Yanni so
+     you don't both do it.
+  2. Detecting invented skills and employers needs a design decision before its 
+     red test. Numbers are easy to check. Skills and employers aren't: rewrites
+     are supposed to borrow the job description's wording, so the check has to
+     catch a skill that appears in the job description but not in the original.
+     I'd suggest flagging tech-looking or proper-noun words (capitalised
+     mid-sentence, acronyms, words like C++ or Node.js) that appear in the
+     rewrite but not in the original. Do you want that heuristic, or something
+     else, such as passing in a list of known skill and employer names?
+
+  Next is the green step: the smallest validate.ts that makes these four tests
+  pass, without touching the test. Then a refactor commit if needed, then the
+  next red cycle. Shall I continue with green?
+
+✻ Cooked for 1m 9s · done 8:03 PM
+
+❯ yes go green, use the heuristic for skills                                    
+
+⏺ Write(lib/pipeline/validate.ts)
+  ⎿  Wrote 13 lines to lib/pipeline/validate.ts
+       1 export type NoInventionResult = { ok: true } | { ok: false; prob
+         lems: string[] };
+       3 export function checkNoInvention(
+       4   original: string,
+       5   rewritten: string,
+       7   const originalNumbers = new Set(original.match(/\d+(?:[.,]\d+)
+         *%?/g) ?? []);
+       8   const problems = (rewritten.match(/\d+(?:[.,]\d+)*%?/g) ?? [])
+      10     .map((n) => `Invented number "${n}" is not in the original b
+         ullet`);
+     … +7 lines (ctrl+o to expand)
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+⏺ Refactor: the number pattern appears twice, so I'll pull it into one helper.
+
+⏺ Write(lib/pipeline/validate.ts)
+  ⎿  Added 8 lines, removed 2 lines
+       1  export type NoInventionResult = { ok: true } | { ok: false; pro
+          blems: string[] };
+       2  
+       3 +const NUMBER_PATTERN = /\d+(?:[.,]\d+)*%?/g;                   
+       4 +                                                               
+       5 +function extractNumbers(text: string): string[] {              
+       6 +  return text.match(NUMBER_PATTERN) ?? [];                     
+       7 +}                                                              
+       8 +                                                               
+       9  export function checkNoInvention(
+      10    original: string,
+      11    rewritten: string,
+      12  ): NoInventionResult {
+       7 -  const originalNumbers = new Set(original.match(/\d+(?:[.,]\d+
+         -)*%?/g) ?? []);                                                
+       8 -  const problems = (rewritten.match(/\d+(?:[.,]\d+)*%?/g) ?? []
+         -)                                                              
+      13 +  const originalNumbers = new Set(extractNumbers(original));   
+      14 +  const problems = extractNumbers(rewritten)                   
+      15      .filter((n) => !originalNumbers.has(n))
+      16      .map((n) => `Invented number "${n}" is not in the original 
+          bullet`);
+      17  
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Now the next red cycle: skills and employers, using the heuristic. These cases
+  set the rules:
+
+⏺ Update(lib/pipeline/validate.test.ts)
+  ⎿  Added 77 lines
+       44      ]);
+       45    });
+       46  });
+       47 +                                                              
+       48 +describe("checkNoInvention — skills and employers", () => {   
+       49 +  it("does not flag a new capitalized word at the start of the
+          + bullet", () => {                                             
+       50 +    const result = checkNoInvention(                          
+       51 +      "made posters for club events",                         
+       52 +      "Designed posters for club events",                     
+       53 +    );                                                        
+       54 +                                                              
+       55 +    expect(result).toEqual({ ok: true });                     
+       56 +  });                                                         
+       57 +                                                              
+       58 +  it("rejects a capitalized technology absent from the origina
+          +l", () => {                                                   
+       59 +    const result = checkNoInvention(                          
+       60 +      "Built a website for a local bakery",                   
+       61 +      "Built a React website for a local bakery",             
+       62 +    );                                                        
+       63 +                                                              
+       64 +    expect(!result.ok && result.problems).toEqual([           
+       65 +      expect.stringContaining("React"),                       
+       66 +    ]);                                                       
+       67 +  });                                                         
+       68 +                                                              
+       69 +  it("rejects an acronym absent from the original, even as the
+          + first word", () => {                                         
+       70 +    const result = checkNoInvention(                          
+       71 +      "Analyzed survey results",                              
+       72 +      "SQL-driven analysis of survey results",                
+       73 +    );                                                        
+       74 +                                                              
+       75 +    expect(!result.ok && result.problems).toEqual([           
+       76 +      expect.stringContaining("SQL"),                         
+       77 +    ]);                                                       
+       78 +  });                                                         
+       79 +                                                              
+       80 +  it("rejects technology names written with symbols", () => { 
+       81 +    const result = checkNoInvention(                          
+       82 +      "Wrote backend services",                               
+       83 +      "Wrote Node.js backend services in C++",                
+       84 +    );                                                        
+       85 +                                                              
+       86 +    expect(!result.ok && result.problems).toEqual([           
+       87 +      expect.stringContaining("Node.js"),                     
+       88 +      expect.stringContaining("C++"),                         
+       89 +    ]);                                                       
+       90 +  });                                                         
+       91 +                                                              
+       92 +  it("rejects an employer absent from the original", () => {  
+       93 +    const result = checkNoInvention(                          
+       94 +      "Interned on the data team",                            
+       95 +      "Interned on the data team at Northwind",               
+       96 +    );                                                        
+       97 +                                                              
+       98 +    expect(!result.ok && result.problems).toEqual([           
+       99 +      expect.stringContaining("Northwind"),                   
+      100 +    ]);                                                       
+      101 +  });                                                         
+      102 +                                                              
+      103 +  it("accepts terms from the original regardless of case or pu
+          +nctuation", () => {                                           
+      104 +    const result = checkNoInvention(                          
+      105 +      "Built a react app with firebase.",                     
+      106 +      "Shipped a React app backed by Firebase",               
+      107 +    );                                                        
+      108 +                                                              
+      109 +    expect(result).toEqual({ ok: true });                     
+      110 +  });                                                         
+      111 +                                                              
+      112 +  it("reports invented numbers and skills together", () => {  
+      113 +    const result = checkNoInvention(                          
+      114 +      "Improved the search page",                             
+      115 +      "Improved search page speed by 30% using Redis",        
+      116 +    );                                                        
+      117 +                                                              
+      118 +    expect(!result.ok && result.problems).toEqual([           
+      119 +      expect.stringContaining("30%"),                         
+      120 +      expect.stringContaining("Redis"),                       
+      121 +    ]);                                                       
+      122 +  });                                                         
+      123 +});                                                           
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Five tests fail as expected, and the other two already pass since nothing is
+  flagged yet; I'm committing these red tests now.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Green: minimal heuristic.
+
+⏺ Write(lib/pipeline/validate.ts)
+  ⎿  Added 21 lines
+      15      .filter((n) => !originalNumbers.has(n))
+      16      .map((n) => `Invented number "${n}" is not in the original 
+          bullet`);
+      17  
+      18 +  const tokenize = (text: string) =>                           
+      19 +    text                                                       
+      20 +      .split(/[\s\-/]+/)                                       
+      21 +      .map((t) => t.replace(/^[^\w]+|[^\w+#]+$/g, ""))         
+      22 +      .filter((t) => t.length > 0);                            
+      23 +                                                               
+      24 +  const originalTerms = new Set(tokenize(original).map((t) => t
+         +.toLowerCase()));                                              
+      25 +  tokenize(rewritten).forEach((term, i) => {                   
+      26 +    if (/^\d/.test(term)) return;                              
+      27 +    const looksLikeTerm =                                      
+      28 +      /[+#]/.test(term) ||                                     
+      29 +      /\w\.\w/.test(term) ||                                   
+      30 +      /^[A-Z]{2,}$/.test(term) ||                              
+      31 +      (i > 0 && /^[A-Z]/.test(term));                          
+      32 +    if (looksLikeTerm && !originalTerms.has(term.toLowerCase())
+         +) {                                                            
+      33 +      problems.push(                                           
+      34 +        `Possible invented skill or employer "${term}" is not i
+         +n the original bullet`,                                        
+      35 +      );                                                       
+      36 +    }                                                          
+      37 +  });                                                          
+      38 +                                                               
+      39    return problems.length === 0 ? { ok: true } : { ok: false, pr
+          oblems };
+      40  }
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+⏺ Refactor: split checkNoInvention into one helper per check so it reads as
+  "numbers + terms", the same shape as the number helper.
+
+⏺ Write(lib/pipeline/validate.ts)  ⎿  Added 43 lines, removed 24 lines
+       6    return text.match(NUMBER_PATTERN) ?? [];
+       7  }
+       8  
+       9 -export function checkNoInvention(                              
+      10 -  original: string,                                            
+      11 -  rewritten: string,                                           
+      12 -): NoInventionResult {                                         
+       9 +// Splits on whitespace, hyphens, and slashes, then trims surro
+         +unding                                                         
+      10 +// punctuation while keeping the + and # in names like C++ and 
+         +C#.                                                            
+      11 +function tokenize(text: string): string[] {                    
+      12 +  return text                                                  
+      13 +    .split(/[\s\-/]+/)                                         
+      14 +    .map((t) => t.replace(/^[^\w]+|[^\w+#]+$/g, ""))           
+      15 +    .filter((t) => t.length > 0);                              
+      16 +}                                                              
+      17 +                                                               
+      18 +// Heuristic for skills and employers: symbols (C++, Node.js), 
+         +acronyms,                                                      
+      19 +// or a capital letter anywhere but the bullet's first word.   
+      20 +function looksLikeSkillOrEmployer(token: string, index: number)
+         +: boolean {                                                    
+      21 +  if (/^\d/.test(token)) return false;                         
+      22 +  return (                                                     
+      23 +    /[+#]/.test(token) ||                                      
+      24 +    /\w\.\w/.test(token) ||                                    
+      25 +    /^[A-Z]{2,}$/.test(token) ||                               
+      26 +    (index > 0 && /^[A-Z]/.test(token))                        
+      27 +  );                                                           
+      28 +}                                                              
+      29 +                                                               
+      30 +function findInventedNumbers(original: string, rewritten: strin
+         +g): string[] {                                                 
+      31    const originalNumbers = new Set(extractNumbers(original));
+      14 -  const problems = extractNumbers(rewritten)                   
+      32 +  return extractNumbers(rewritten)                             
+      33      .filter((n) => !originalNumbers.has(n))
+      34      .map((n) => `Invented number "${n}" is not in the original 
+          bullet`);
+      35 +}                                                              
+      36  
+      18 -  const tokenize = (text: string) =>                           
+      19 -    text                                                       
+      20 -      .split(/[\s\-/]+/)                                       
+      21 -      .map((t) => t.replace(/^[^\w]+|[^\w+#]+$/g, ""))         
+      22 -      .filter((t) => t.length > 0);                            
+      23 -                                                               
+      37 +function findInventedTerms(original: string, rewritten: string)
+         +: string[] {                                                   
+      38    const originalTerms = new Set(tokenize(original).map((t) => t
+          .toLowerCase()));
+      25 -  tokenize(rewritten).forEach((term, i) => {                   
+      26 -    if (/^\d/.test(term)) return;                              
+      27 -    const looksLikeTerm =                                      
+      28 -      /[+#]/.test(term) ||                                     
+      29 -      /\w\.\w/.test(term) ||                                   
+      30 -      /^[A-Z]{2,}$/.test(term) ||                              
+      31 -      (i > 0 && /^[A-Z]/.test(term));                          
+      32 -    if (looksLikeTerm && !originalTerms.has(term.toLowerCase())
+         -) {                                                            
+      33 -      problems.push(                                           
+      34 -        `Possible invented skill or employer "${term}" is not i
+         -n the original bullet`,                                        
+      35 -      );                                                       
+      36 -    }                                                          
+      37 -  });                                                          
+      39 +  return tokenize(rewritten)                                   
+      40 +    .filter(                                                   
+      41 +      (t, i) =>                                                
+      42 +        looksLikeSkillOrEmployer(t, i) && !originalTerms.has(t.
+         +toLowerCase()),                                                
+      43 +    )                                                          
+      44 +    .map(                                                      
+      45 +      (t) =>                                                   
+      46 +        `Possible invented skill or employer "${t}" is not in t
+         +he original bullet`,                                           
+      47 +    );                                                         
+      48 +}                                                              
+      49  
+      50 +export function checkNoInvention(                              
+      51 +  original: string,                                            
+      52 +  rewritten: string,                                           
+      53 +): NoInventionResult {                                         
+      54 +  const problems = [                                           
+      55 +    ...findInventedNumbers(original, rewritten),               
+      56 +    ...findInventedTerms(original, rewritten),                 
+      57 +  ];                                                           
+      58    return problems.length === 0 ? { ok: true } : { ok: false, pr
+          oblems };
+      59  }
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ The no-invention check is finished with two full red → green → refactor
+  cycles: six commits on main, local only and not pushed yet. All 12 tests pass
+  and lint is clean.
+
+  b090430 refactor(rewriter): split no-invention check into number and term 
+  helpers
+  5620a56 feat(rewriter): [green] reject rewrites with invented skills and 
+  employers
+  fbcdaeb test(rewriter): [red] no-invention check rejects invented skills and 
+  employers
+  ef36e6b refactor(rewriter): extract number pattern into a helper
+  89d00a3 feat(rewriter): [green] reject rewrites with invented numbers
+  d645537 test(rewriter): [red] no-invention check rejects invented numbers
+
+  How checkNoInvention(original, rewritten) works (lib/pipeline/validate.ts):
+  - Numbers: any number in the rewrite that isn't in the original is rejected,
+    for example 40%, 150, or the 3 in 3-day.
+  - Skills and employers: a word in the rewrite that isn't in the original is
+    flagged if it looks like a name. That means it contains +, # or an inner dot
+    (C++, Node.js), or it's an acronym (SQL), or it's capitalised anywhere
+    except the first word (React, Northwind). Matching ignores case and
+    surrounding punctuation, so react in the original allows React in the
+    rewrite.
+  - It returns { ok: true }, or { ok: false, problems } with one plain sentence
+    per problem. Those sentences are ready to send back as the retry feedback.
+
+  In the skills red commit, two of the seven new tests passed straight away.
+  They check that the first word of a bullet and words reused from the original
+  aren't flagged, so the heuristic couldn't flag too much. The commit message
+  says so.
+
+  Known gaps in the heuristic. Each would be its own red cycle if you want it
+  fixed:
+  - A skill written in lowercase isn't caught, e.g. "using docker".
+  - A capitalised word after a full stop in the middle of a bullet is wrongly
+    flagged.
+  - A multi-word employer like "Northwind Traders" gets reported as two separate
+    problems.
+
+  What's next for #6: "retry once with feedback, then keep the original text and
+  flag it" needs the rewrite result schema and callClaude from #1. Once Yanni
+  merges #1, that goes in resumeRewriter.ts. Meanwhile I could start #7 (the
+  comparison screen) in Plan mode against fixture data, which covers the Part 2
+  workflow.
+
+  Before pushing, run git pull --rebase. The package-lock.json sync issue from
+  earlier is still open, and I haven't changed the lockfile.
+
+✻ Cooked for 1m 24s · done 8:09 PM
+
+❯ push it, then start #7 in plan mode                                           
+
+  Pushed to main (ctrl+o to expand)
+
+⏺ Pushed (e66450f..b090430), and the suite was green after the rebase. Starting
+  #7: brainstorming first, then entering plan mode.
+
+⏺ Skill(superpowers:brainstorming)
+  ⎿  Successfully loaded skill
+
+⏺ Entered plan mode
+  Claude is now exploring and designing an implementation approach.
+
+⏺ Explore phase. The repo is small, so I'll read it directly instead of fanning
+  out to agents.
+
+  Ran 3 shell commands (ctrl+o to expand)
+
+⏺ I've read enough to design this. Two open decisions change what gets built, so
+  I'll ask before writing the plan.
+
+⏺ User answered Claude's questions:
+  ⎿  · The rewrite result schema from #1 doesn't exist yet, and the screen needs
+     fields it may not have, such as the reason a bullet was flagged (story 7: 
+     'show that the original was kept and why'). How should #7 handle that? → 
+     Local type + comment on #1 (Recommended)
+     · The accept/edit/flagged state for each bullet (and whether every bullet 
+     has been decided) is pure logic. Where should it live? → lib/ reducer, 
+     TDD'd (Recommended)
+
+⏺ Updated plan
+  ⎿  /plan to preview
+
+⏺ User approved Claude's plan
+  ⎿  Plan saved to: ~/.claude/plans/gentle-questing-cloud.md · /plan to edit
+     Plan: #7 Bullet comparison screen
+
+     Context
+
+     Issue #7 (stories 6 and 7): the user sees each original bullet next to its
+     rewrite and must accept or edit every one. Flagged bullets (the rewrite
+     failed the no-invention check, so the original was kept) are clearly marked
+     with the reason. A final version shows every bullet as accepted or edited.
+     It's built first against fictional fixture data and connected to the
+     rewriter's Server Action later. #1 (lib/types.ts) and #6's Server Action
+     don't exist yet. For Part 2, this feature also shows Explore → Plan →
+     Implement → Commit in the git history.
+
+     Decisions (from you):
+     - Use a provisional local type until #1 merges, and comment on #1 listing
+       the fields the screen needs.
+     - Put the review state in a reducer in lib/ and build it with strict TDD.
+
+     Explore findings
+
+     - app/page.tsx and app/layout.tsx are still the scaffold. There are no
+       components, no routes, and no lib/types.ts.
+     - app/globals.css has only background/foreground tokens. Use Tailwind
+       utilities, no component library.
+     - Next 16 docs (node_modules/next/dist/docs/01-app/01-getting-started/05-se
+       rver-and-client-components.md): pages are Server Components, and "use 
+       client" goes on interactive leaves only. Static fixture data is fine
+       under cacheComponents (no dynamic data, so no Suspense needed).
+     - lib/pipeline/validate.ts produces one problem sentence per invented term.
+       Those sentences are the natural flagReason text.
+
+     Design
+
+     Provisional type: lib/review/provisionalRewrite.ts (header comment: replace
+     with z.infer from lib/types.ts once #1 merges)
+     type ProvisionalRewriteResult = {
+       items: { id: string; title: string;
+         bullets: { original: string; rewritten: string; flagged: boolean;
+     flagReason?: string }[] }[]
+     }
+     title probably comes from the selected experience, not the rewrite result.
+     At integration we'll merge it in, so the screen's props stay the same.
+
+     Reducer: lib/review/bulletReview.ts, pure functions, no React
+     - initReview(result): one entry per bullet, keyed ${itemId}:${index},
+       status pending.
+     - reviewReducer(state, action):
+       - { type: "accept", key }: final text is the rewrite, or the original for
+         a flagged bullet; status accepted.
+       - { type: "edit", key, text }: final text is text; status edited. Works
+         from any status, so a decision can be changed.
+     - isComplete(state): true when no bullet is pending.
+     - finalBullets(state): final text grouped by item, in the original order.
+
+     UI: app/review/
+     - page.tsx: Server Component shell with heading and short instructions;
+       renders <BulletComparison result={sampleRewrite} />.
+     - BulletComparison.tsx ("use client"): useReducer over the lib reducer.
+       Groups rows by item and shows "N of M reviewed".
+       - Each row has two columns, Original | Rewrite, plus Accept / Edit. Edit
+         opens an inline textarea prefilled with the current text, with
+         Save/Cancel. A status badge shows Pending / Accepted / Edited.
+       - Flagged rows get an amber border and the note "Original kept: rewrite
+         added something not in your bullet", followed by the flagReason. The
+         right column shows the original. Accept keeps the original; Edit is
+         allowed.
+       - A Final version panel shows each item's final bullets once isComplete.
+         Until then it shows a disabled placeholder.
+     - Fixture: lib/review/sampleRewrite.ts, for a fictional person ("Maya
+       Okafor", fictional employers), 2 items and about 5 bullets, with one
+       flagged bullet whose flagReason is in validate.ts's wording.
+
+     Not in scope: export or copy (PRD), persisting review state to storage, the
+     Server Action connection (blocked on #1/#6; left unchecked on #7).
+
+     Steps and commits
+
+     1. Comment on #1 listing the fields the screen needs: per bullet original,
+        rewritten, flagged, flagReason; per item id, plus title from the
+        selected experience. Commit this plan as
+        docs/plans/2026-11-22-bullet-comparison.md: docs: plan bullet comparison
+        screen.
+     2. TDD the reducer, with separate red, green and refactor commits for each
+        cycle:
+        - initReview + accept (normal and flagged)
+        - edit (including changing an earlier decision)
+        - isComplete + finalBullets
+     3. feat(review): add provisional rewrite type and fictional fixture
+     4. feat(review): bullet comparison screen with accept, edit, and flagged 
+        states
+     5. Delete lib/placeholder.test.ts now that real tests exist, and update
+        CLAUDE.md's Status section: chore: remove placeholder test.
+     6. Run git pull --rebase, then push. Add a progress comment on #7.
+
+     Verification
+
+     - npm test: reducer tests pass, and the validate tests are still green.
+     - npm run lint and npm run build pass (build is the type-check gate).
+     - npm run dev, then open http://localhost:3000/review and check that:
+       - Accept and Edit both work.
+       - The flagged bullet shows the original and the reason.
+       - The counter updates.
+       - The final panel appears only after every bullet is decided.
+
+⏺ The plan is approved. Step 1 is the comment on #1 and committing the plan doc.
+  Working directory first:
+
+⏺ Bash(cd "/Users/samuelcoe/Documents/AI Coding Course/tailorfit" && mkdir -p
+      docs/plans && cp /Users/samuelcoe/.claude/plans/gentle-questing-cloud.md
+      docs/plans/2026-…)
+  ⎿  https://github.com/Yifeicarrots/tailorfit/issues/1#issuecomment-709054
+     3680
+  ⎿  Created docs/plans/2026-11-22-bullet-comparison.md (+63 -0)
+       1 +# Plan: #7 Bullet comparison screen                            
+       2 +                                                               
+       3 +## Context                                                     
+       4 +Issue #7 (stories 6 and 7): the user sees each original bullet 
+         +next to its rewrite and must accept or edit every one. Flagged 
+         +bullets (the rewrite failed the no-invention check, so the orig
+         +inal was kept) are clearly marked with the reason. A final vers
+         +ion shows every bullet as accepted or edited. It's built first 
+         +against fictional fixture data and connected to the rewriter's 
+         +Server Action later. #1 (`lib/types.ts`) and #6's Server Action
+         + don't exist yet. For Part 2, this feature also shows Explore →
+         + Plan → Implement → Commit in the git history.                 
+       5 +                                                               
+       6 +**Decisions (from you):**                                      
+       7 +- Use a provisional local type until #1 merges, and comment on 
+         +#1 listing the fields the screen needs.                        
+       8 +- Put the review state in a reducer in `lib/` and build it with
+         + strict TDD.                                                   
+       9 +                                                               
+      10 +## Explore findings                                            
+      11 +- `app/page.tsx` and `app/layout.tsx` are still the scaffold. T
+         +here are no components, no routes, and no `lib/types.ts`.      
+      12 +- `app/globals.css` has only `background`/`foreground` tokens. 
+         +Use Tailwind utilities, no component library.                  
+      13 +- Next 16 docs (`node_modules/next/dist/docs/01-app/01-getting-
+         +started/05-server-and-client-components.md`): pages are Server 
+         +Components, and `"use client"` goes on interactive leaves only.
+         + Static fixture data is fine under `cacheComponents` (no dynami
+         +c data, so no Suspense needed).                                
+      14 +- `lib/pipeline/validate.ts` produces one problem sentence per 
+         +invented term. Those sentences are the natural `flagReason` tex
+         +t.                                                             
+      15 +                                                               
+      16 +## Design                                                      
+      17 +                                                               
+      18 +**Provisional type**: `lib/review/provisionalRewrite.ts` (heade
+         +r comment: replace with `z.infer` from `lib/types.ts` once #1 m
+         +erges)                                                         
+      19 +```ts                                                          
+      20 +type ProvisionalRewriteResult = {                              
+      21 +  items: { id: string; title: string;                          
+      22 +    bullets: { original: string; rewritten: string; flagged: bo
+         +olean; flagReason?: string }[] }[]                             
+      23 +}                                                              
+      24 +```                                                            
+      25 +`title` probably comes from the selected experience, not the re
+         +write result. At integration we'll merge it in, so the screen's
+         + props stay the same.                                          
+      26 +                                                               
+      27 +**Reducer**: `lib/review/bulletReview.ts`, pure functions, no R
+         +eact                                                           
+      28 +- `initReview(result)`: one entry per bullet, keyed `${itemId}:
+         +${index}`, status `pending`.                                   
+      29 +- `reviewReducer(state, action)`:                              
+      30 +  - `{ type: "accept", key }`: final text is the rewrite, or th
+         +e original for a flagged bullet; status `accepted`.            
+      31 +  - `{ type: "edit", key, text }`: final text is `text`; status
+         + `edited`. Works from any status, so a decision can be changed.
+      32 +- `isComplete(state)`: true when no bullet is `pending`.       
+      33 +- `finalBullets(state)`: final text grouped by item, in the ori
+         +ginal order.                                                   
+      34 +                                                               
+      35 +**UI**: `app/review/`                                          
+      36 +- `page.tsx`: Server Component shell with heading and short ins
+         +tructions; renders `<BulletComparison result={sampleRewrite} />
+         +`.                                                             
+      37 +- `BulletComparison.tsx` (`"use client"`): `useReducer` over th
+         +e lib reducer. Groups rows by item and shows "N of M reviewed".
+      38 +  - Each row has two columns, Original | Rewrite, plus Accept /
+         + Edit. Edit opens an inline textarea prefilled with the current
+         + text, with Save/Cancel. A status badge shows Pending / Accepte
+         +d / Edited.                                                    
+      39 +  - Flagged rows get an amber border and the note "Original kep
+         +t: rewrite added something not in your bullet", followed by the
+         + `flagReason`. The right column shows the original. Accept keep
+         +s the original; Edit is allowed.                               
+      40 +  - A Final version panel shows each item's final bullets once 
+         +`isComplete`. Until then it shows a disabled placeholder.      
+     … 23 more lines (ctrl+o to expand)
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Small change to the order: the reducer tests need the provisional type to
+  exist, so step 3 (type and fixture, which are data with no behavior) goes
+  before the TDD cycles.
+
+⏺ Write(lib/review/provisionalRewrite.ts)
+  ⎿  Wrote 15 lines to lib/review/provisionalRewrite.ts
+       1 // Provisional shape of the rewrite result until #1 adds the rea
+         l Zod schema
+         erges.
+       3 // `title` comes from the selected experience, merged in at inte
+         gration.
+       5   items: {
+       6     id: string;
+       7     title: string;
+       9       original: string;
+      10       rewritten: string;
+     … +8 lines (ctrl+o to expand)
+
+⏺ Write(lib/review/sampleRewrite.ts)
+  ⎿  Wrote 51 lines to lib/review/sampleRewrite.ts
+       1 import type { ProvisionalRewriteResult } from "./provisionalRewr
+         ite";
+       3 // Fictional person (Maya Okafor) and employers, tailored to a m
+         ade-up data
+       4 // analyst internship. Used to build the comparison screen befor
+       5 // rewriter's Server Action exists.
+       6 export const sampleRewrite: ProvisionalRewriteResult = {
+       7   items: [
+       9       id: "exp-library",
+      10       title: "Program Assistant, Brightwater Community Library",
+     … +54 lines (ctrl+o to expand)
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ The LayoutProps type error comes from the scaffold's layout file, since bare
+  tsc can't see the generated route types; the build step will check it
+  properly. I'm starting TDD cycle 1 with the red tests for initReview and
+  accept.
+
+⏺ Write(lib/review/bulletReview.test.ts)
+  ⎿  Wrote 75 lines to lib/review/bulletReview.test.ts
+       1 import { describe, expect, it } from "vitest";
+       2 import { initReview, reviewReducer, type ReviewState } from "./b
+         ulletReview";
+         ite";
+       4 
+       5 const result: ProvisionalRewriteResult = {
+       6   items: [
+       8       id: "a",
+       9       title: "Item A",
+      10       bullets: [
+     … +78 lines (ctrl+o to expand)
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+⏺ Write(lib/review/bulletReview.ts)
+  ⎿  Wrote 52 lines to lib/review/bulletReview.ts
+       1 import type { ProvisionalRewriteResult } from "./provisionalRewr
+         ite";
+       2 
+       3 export type ReviewBullet = {
+       4   key: string;
+       6   rewritten: string;
+       7   flagged: boolean;
+       8   flagReason?: string;
+       9   status: "pending" | "accepted";
+      10   finalText: string | null;
+     … +44 lines (ctrl+o to expand)
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Nothing worth refactoring yet, so I'm skipping that step for this cycle. Cycle
+  2, red: edit.
+
+⏺ Bash(cd "/Users/samuelcoe/Documents/AI Coding Course/tailorfit" && cat >>
+      lib/review/bulletReview.test.ts <<'EOF'…)  ⎿       × uses the user's text as the final text 4ms
+          × replaces an earlier accept 0ms
+     ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+     … +10 lines (ctrl+o to expand)
+  ⎿  Updated lib/review/bulletReview.test.ts (+29 -0)
+       73      expect(bullet(state, "b:0")?.status).toBe("pending");
+       74    });
+       75  });
+       76 +                                                              
+       77 +describe("edit", () => {                                      
+       78 +  it("uses the user's text as the final text", () => {        
+       79 +    const state = reviewReducer(initReview(result), {         
+       80 +      type: "edit",                                           
+       81 +      key: "b:0",                                             
+       82 +      text: "Led z end to end",                               
+       83 +    });                                                       
+       84 +                                                              
+       85 +    expect(bullet(state, "b:0")).toMatchObject({              
+       86 +      status: "edited",                                       
+       87 +      finalText: "Led z end to end",                          
+       88 +    });                                                       
+       89 +  });                                                         
+       90 +                                                              
+       91 +  it("replaces an earlier accept", () => {                    
+       92 +    const accepted = reviewReducer(initReview(result), { type:
+          + "accept", key: "a:0" });                                     
+       93 +    const state = reviewReducer(accepted, {                   
+       94 +      type: "edit",                                           
+       95 +      key: "a:0",                                             
+       96 +      text: "Shipped x",                                      
+       97 +    });                                                       
+       98 +                                                              
+       99 +    expect(bullet(state, "a:0")).toMatchObject({              
+      100 +      status: "edited",                                       
+      101 +      finalText: "Shipped x",                                 
+      102 +    });                                                       
+      103 +  });                                                         
+      104 +});                                                           
+
+⏺ Both tests fail on their assertions. (The "changed on disk" note is just my
+  own append.) Committing red, then green:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Update(lib/review/bulletReview.ts)
+  ⎿  Added 1 line, removed 1 line
+       6    rewritten: string;
+       7    flagged: boolean;
+       8    flagReason?: string;
+       9 -  status: "pending" | "accepted";                              
+       9 +  status: "pending" | "accepted" | "edited";                   
+      10    finalText: string | null;
+      11  };
+      12  
+
+⏺ Update(lib/review/bulletReview.ts)
+  ⎿  Added 3 lines, removed 1 line
+      14    items: { id: string; title: string; bullets: ReviewBullet[] }
+          [];
+      15  };
+      16  
+      17 -export type ReviewAction = { type: "accept"; key: string };    
+      17 +export type ReviewAction =                                     
+      18 +  | { type: "accept"; key: string }                            
+      19 +  | { type: "edit"; key: string; text: string };               
+      20  
+      21  export function initReview(result: ProvisionalRewriteResult): R
+          eviewState {
+      22    return {
+
+⏺ Update(lib/review/bulletReview.ts)
+  ⎿  Added 9 lines, removed 7 lines
+      41      items: state.items.map((item) => ({
+      42        ...item,
+      43        bullets: item.bullets.map((b) =>
+      44 -        b.key === action.key                                   
+      45 -          ? {                                                  
+      46 -              ...b,                                            
+      47 -              status: "accepted",                              
+      48 -              finalText: b.flagged ? b.original : b.rewritten, 
+      49 -            }                                                  
+      50 -          : b,                                                 
+      44 +        b.key !== action.key                                   
+      45 +          ? b                                                  
+      46 +          : action.type === "edit"                             
+      47 +            ? { ...b, status: "edited", finalText: action.text 
+         +}                                                              
+      48 +            : {                                                
+      49 +                ...b,                                          
+      50 +                status: "accepted",                            
+      51 +                finalText: b.flagged ? b.original : b.rewritten
+         +,                                                              
+      52 +              },                                               
+      53        ),
+      54      })),
+      55    };
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Refactor: the nested ternary will get harder to read, so I'll pull the
+  per-bullet update into a switch.
+
+⏺ Update(lib/review/bulletReview.ts)
+  ⎿  Added 16 lines, removed 9 lines
+      33    };
+      34  }
+      35  
+      36 +// Accepting a flagged bullet keeps its original, since its rew
+         +rite failed                                                    
+      37 +// the no-invention check.                                     
+      38 +function applyAction(bullet: ReviewBullet, action: ReviewAction
+         +): ReviewBullet {                                              
+      39 +  switch (action.type) {                                       
+      40 +    case "accept":                                             
+      41 +      return {                                                 
+      42 +        ...bullet,                                             
+      43 +        status: "accepted",                                    
+      44 +        finalText: bullet.flagged ? bullet.original : bullet.re
+         +written,                                                       
+      45 +      };                                                       
+      46 +    case "edit":                                               
+      47 +      return { ...bullet, status: "edited", finalText: action.t
+         +ext };                                                         
+      48 +  }                                                            
+      49 +}                                                              
+      50 +                                                               
+      51  export function reviewReducer(
+      52    state: ReviewState,
+      53    action: ReviewAction,
+     ...
+      56      items: state.items.map((item) => ({
+      57        ...item,
+      58        bullets: item.bullets.map((b) =>
+      44 -        b.key !== action.key                                   
+      45 -          ? b                                                  
+      46 -          : action.type === "edit"                             
+      47 -            ? { ...b, status: "edited", finalText: action.text 
+         -}                                                              
+      48 -            : {                                                
+      49 -                ...b,                                          
+      50 -                status: "accepted",                            
+      51 -                finalText: b.flagged ? b.original : b.rewritten
+         -,                                                              
+      52 -              },                                               
+      59 +        b.key === action.key ? applyAction(b, action) : b,     
+      60        ),
+      61      })),
+      62    };
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Cycle 3, red: isComplete and finalBullets.
+
+⏺ Bash(cd "/Users/samuelcoe/Documents/AI Coding Course/tailorfit" && python3 -
+      <<'EOF'
+      p = "lib/review/bulletReview.test.ts"…)
+  ⎿       × is false while any bullet is pending 1ms
+          × is true once every bullet is accepted or edited 0ms
+          × lists each item's final text in the original order 0ms
+     … +12 lines (ctrl+o to expand)
+  ⎿  Updated lib/review/bulletReview.test.ts (+38 -1)
+       1  import { describe, expect, it } from "vitest";
+       2 -import { initReview, reviewReducer, type ReviewState } from "./
+         -bulletReview";                                                 
+       2 +import {                                                       
+       3 +  finalBullets,                                                
+       4 +  initReview,                                                  
+       5 +  isComplete,                                                  
+       6 +  reviewReducer,                                               
+       7 +  type ReviewAction,                                           
+       8 +  type ReviewState,                                            
+       9 +} from "./bulletReview";                                       
+      10  import type { ProvisionalRewriteResult } from "./provisionalRew
+          rite";
+      11  
+      12  const result: ProvisionalRewriteResult = {
+     ...
+      109      });
+      110    });
+      111  });
+      112 +                                                              
+      113 +function decideAll(): ReviewState {                           
+      114 +  const actions: ReviewAction[] = [                           
+      115 +    { type: "accept", key: "a:0" },                           
+      116 +    { type: "accept", key: "a:1" },                           
+      117 +    { type: "edit", key: "b:0", text: "Led z end to end" },   
+      118 +  ];                                                          
+      119 +  return actions.reduce(reviewReducer, initReview(result));   
+      120 +}                                                             
+      121 +                                                              
+      122 +describe("isComplete", () => {                                
+      123 +  it("is false while any bullet is pending", () => {          
+      124 +    const state = reviewReducer(initReview(result), { type: "a
+          +ccept", key: "a:0" });                                        
+      125 +                                                              
+      126 +    expect(isComplete(state)).toBe(false);                    
+      127 +  });                                                         
+      128 +                                                              
+      129 +  it("is true once every bullet is accepted or edited", () => 
+          +{                                                             
+      130 +    expect(isComplete(decideAll())).toBe(true);               
+      131 +  });                                                         
+      132 +});                                                           
+      133 +                                                              
+      134 +describe("finalBullets", () => {                              
+      135 +  it("lists each item's final text in the original order", () 
+          +=> {                                                          
+     … 6 more lines (ctrl+o to expand)
+
+⏺ Bash(cd "/Users/samuelcoe/Documents/AI Coding Course/tailorfit" && git add
+      lib/review/bulletReview.test.ts && git commit -q -F - <<'EOF'
+      test(review): [red] complete…)
+  ⎿   Test Files  3 passed (3)
+           Tests  21 passed (21)
+     da516c7 feat(review): [green] completeness check and final bullets per
+     … +3 lines (ctrl+o to expand)
+  ⎿  Updated lib/review/bulletReview.ts (+16 -0)
+      61      })),
+      62    };
+      63  }
+      64 +                                                               
+      65 +export function isComplete(state: ReviewState): boolean {      
+      66 +  return state.items.every((item) =>                           
+      67 +    item.bullets.every((b) => b.status !== "pending"),         
+      68 +  );                                                           
+      69 +}                                                              
+      70 +                                                               
+      71 +export function finalBullets(                                  
+      72 +  state: ReviewState,                                          
+      73 +): { id: string; title: string; bullets: string[] }[] {        
+      74 +  return state.items.map((item) => ({                          
+      75 +    id: item.id,                                               
+      76 +    title: item.title,                                         
+      77 +    bullets: item.bullets.map((b) => b.finalText ?? b.original)
+         +,                                                              
+      78 +  }));                                                         
+      79 +}                                                              
+
+⏺ Nothing worth refactoring in cycle 3. Now the UI: the page shell and the
+  client comparison component.
+
+⏺ Write(app/review/BulletComparison.tsx)
+  ⎿  Wrote 186 lines to app/review/BulletComparison.tsx
+       1 "use client";
+       2 
+       3 import { useReducer, useState } from "react";
+       4 import {
+       5   finalBullets,
+       6   initReview,
+       7   isComplete,
+       8   reviewReducer,
+       9   type ReviewBullet,
+      10 } from "@/lib/review/bulletReview";
+     … +203 lines (ctrl+o to expand)
+
+⏺ Write(app/review/page.tsx)
+  ⎿  Wrote 18 lines to app/review/page.tsx
+       1 import { sampleRewrite } from "@/lib/review/sampleRewrite";
+       2 import { BulletComparison } from "./BulletComparison";
+       4 // Uses fixture data until the rewriter's Server Action exists (
+         #6).
+       5 export default function ReviewPage() {
+       7     <main className="mx-auto flex w-full max-w-4xl flex-col gap-
+         6 px-4 py-10">
+       8       <header className="flex flex-col gap-2">
+         tes</h1>
+      10         <p className="text-zinc-600 dark:text-zinc-400">
+     … +11 lines (ctrl+o to expand)
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Lint and build pass, and /review prerenders as static. Now I'll check it in
+  the running app.
+
+⏺ Skill(run)
+  ⎿  Successfully loaded skill
+
+  Listed 1 directory, ran 1 shell command (ctrl+o to expand)
+
+⏺ No browser driver is installed, but Playwright's Chromium is cached, so I'll
+  set up the driver-only playwright-core in the scratchpad outside the project
+  and use it to run the dev server.
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+⏺ That was likely denied because of the kill on port 3000, which might stop a
+  server you're running. I'll check what's listening and start the server
+  without killing anything.
+
+  Made 1 scratchpad edit +54, searched for 1 pattern, ran 5 shell commands (ctrl+o to expand)
+
+⏺ All 14 browser checks pass. Next I'll look at the screenshots, then commit.
+
+  Read 2 files (ctrl+o to expand)
+
+⏺ Both screenshots look right. One small fix: an Accept button that's already
+  been used is disabled but looks the same as an active one, so I'll give
+  disabled buttons a faded style. Then I'll commit.
+
+⏺ Update(app/review/BulletComparison.tsx)
+  ⎿  Added 1 line, removed 1 line
+      18  };
+      19  
+      20  const buttonClass =
+      21 -  "rounded-md border border-zinc-300 px-3 py-1.5 text-sm font-m
+         -edium hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc
+         --800";                                                         
+      21 +  "rounded-md border border-zinc-300 px-3 py-1.5 text-sm font-m
+         +edium hover:bg-zinc-100 disabled:cursor-default disabled:opacit
+         +y-40 disabled:hover:bg-transparent dark:border-zinc-700 dark:ho
+         +ver:bg-zinc-800";                                              
+      22  
+      23  export function BulletComparison({
+      24    result,
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Step 5: remove the placeholder test and update CLAUDE.md's Status line, which
+  is now out of date.
+⏺ Update(CLAUDE.md)
+  ⎿  Added 1 line, removed 1 line
+       7  
+       8  ## Status
+       9  
+      10 -Fresh `create-next-app` scaffold: `app/page.tsx` and `app/layou
+         -t.tsx` are still template code. `@anthropic-ai/sdk`, `zod`, and
+         - `vitest` are installed; `vitest.config.ts` excludes `evals/`. 
+         -The only test is `lib/placeholder.test.ts` — delete it once rea
+         -l tests exist. `lib/pipeline/`, `lib/storage/`, and the `eval` 
+         -script don't exist yet.                                        
+      10 +`app/page.tsx` and `app/layout.tsx` are still template code. `@
+         +anthropic-ai/sdk`, `zod`, and `vitest` are installed; `vitest.c
+         +onfig.ts` excludes `evals/`. Built so far: the no-invention che
+         +ck (`lib/pipeline/validate.ts`) and the bullet comparison scree
+         +n (`app/review/`, with its reducer in `lib/review/`), which run
+         +s on fixture data and a provisional type in `lib/review/provisi
+         +onalRewrite.ts` until `lib/types.ts` (#1) lands. `lib/storage/`
+         +, `lib/types.ts`, and the `eval` script don't exist yet.       
+      11  
+      12  **Local only.** The app runs on `localhost` and must not be dep
+          loyed publicly: there is no real authentication, so a public de
+          ployment would let anyone spend the Anthropic API key.
+      13  
+
+⏺ Bash(cd "/Users/samuelcoe/Documents/AI Coding Course/tailorfit" && git rm -q
+      lib/placeholder.test.ts && npm test 2>&1 | grep -E "FAIL|Tests |Test
+      Files" && git add C…)
+  ⎿   Test Files  2 passed (2)
+           Tests  20 passed (20)
+     Current branch main is up to date.
+     … +2 lines (ctrl+o to expand)
+  ⎿  Deleted lib/placeholder.test.ts (+0 -8)
+  ⎿  (a git step in this command can move the working tree, so these may be
+     its changes, not edits) (ctrl+o to expand)
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ The comparison screen for #7 is built and pushed to main (b090430..5d60ef0).
+  The only piece left is connecting it to the rewriter's Server Action, which
+  has to wait for #1 and #6.
+
+  What it does (/review, running on sample data for a fictional person):
+  - Each original bullet sits next to its rewrite, with Accept and an inline
+    Edit, and a counter shows how many bullets are done.
+  - A flagged bullet has an amber border and says the original was kept, with
+    the reason (e.g. "Tableau" is not in the original bullet). Its button reads
+    "Accept original".
+  - The final version only appears once every bullet is accepted or edited.
+
+  How I checked it: all 20 unit tests pass, and lint and npm run build pass. I
+  also clicked through the page in a headless browser against the dev server: 14
+  of 14 checks passed with no console errors, and I looked at the screenshots.
+  That browser driver lives in the scratchpad
+  (/private/tmp/claude-501/-Users-samuelcoe-Documents-AI-Coding-Course-tailorfit
+  /a43f1cb7-f467-490e-aa78-5ae746f775db/scratchpad/driver/drive.mjs), so nothing
+  was added to package.json.
+
+  What the history shows for the assignment:
+  - Part 2: the plan saved as a commit
+    (docs/plans/2026-11-22-bullet-comparison.md), then the implementation
+    commits.
+  - Part 3: the review state logic (lib/review/bulletReview.ts) was built in
+    three red/green cycles, with one refactor commit.
+
+  Changes from the plan:
+  - I committed the provisional type and sample data before the test cycles,
+    because the tests import the type.
+  - Cycles 1 and 3 have no refactor commit, since there was nothing to clean up.
+
+  On GitHub:
+  - On #1, I listed the fields the screen needs, mainly flagReason, which says
+    why a bullet was flagged.
+  - On #7, I posted a progress checklist.
+  - I also deleted the placeholder test and updated the Status section of
+    CLAUDE.md.
+
+  Still open:
+  - Dev server: still running in the background on port 3000. Stop it when
+    you're done looking.
+  - Lockfile: package-lock.json is still out of sync with package.json. I didn't
+    touch it.
+  - For your reflection: the auto-mode classifier blocked one command because it
+    would have killed whatever was on port 3000. I switched to checking the
+    port first and then starting the server, which is a good example of the
+    permissions setup at work.
+
+✻ Crunched for 4m 59s · done 8:15 PM
+
+❯ So now for the homework 4, what I have done and what I need to do now.        
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Here's where the assignment stands, part by part, based on the repo and this
+  session.
+
+  Done
+
+  Part 1: Setup (25%), mostly done
+  - /init output committed (517ffa2), then improved through an interview
+    (8c892fe). The interview transcript is saved in
+    docs/session-logs/01-claude-md-interview.txt.
+  - CLAUDE.md covers stack, architecture, conventions, testing, git rules and
+    do's/don'ts, and imports @AGENTS.md and @docs/PRD.md.
+  - .claude/settings.json has allow, ask and deny lists. For example, npm run 
+    eval and reading .env are denied.
+  - /clear appears at the start of session log 01.
+
+  Part 2: Explore → Plan → Implement → Commit (30%), done (#7)
+  - Explore: this session, reading the scaffold, the config and the Next 16
+    docs.
+  - Plan: plan mode with two decisions you made; the plan is committed
+    (232237b).
+  - Implement and commit: 0e0f1ff → 7cfc9b4 → 5d60ef0.
+
+  Part 3: TDD (30%), done
+  - 5 red → green cycles across two features, in 13 commits:
+    - no-invention check: 2 cycles, each with a refactor commit
+    - review reducer: 3 cycles, one with a refactor commit
+  - Every red step was run and seen to fail before the green commit.
+
+  Still to do
+
+  1. Save this session as log 02. Do it now, before it's cleared.
+  Type /export docs/session-logs/02-tdd-and-plan-mode.txt. This is your best
+  evidence for Parts 2 and 3. It shows:
+  - plan mode, and the questions you answered in it
+  - each red test failing before green
+  - the auto-mode classifier blocking the port-kill command (good material for
+    the permissions part)
+
+  2. Show /compact and --continue (a Part 1 requirement that isn't shown yet).
+  For example:
+  - run /compact at the end of this session, then export or screenshot it
+  - next time, start with claude --continue and capture that too
+
+  Then add a short "Context management" paragraph to the reflection: when you
+  use /clear (switching to a new task), /compact (a long session on the same
+  task), and --continue (picking up the next day).
+
+  3. Annotate the session logs (Part 4).
+  Add short notes at the key moments, such as [EXPLORE], [PLAN MODE], [RED: test
+  fails], [GREEN], [REFACTOR], [PERMISSION DENIED → safer approach], [CONTEXT: 
+  /clear]. I can add these to the exported log, since they only label what
+  happened.
+
+  4. Write the reflection (1–2 pages). It should answer:
+  - How did Explore → Plan → Implement → Commit compare with how you worked
+    before? Concrete moments from this session:
+    - plan mode surfaced the missing flagReason field before any code was
+      written
+    - the plan's order needed changing once real work started (the type before
+      the tests)
+  - Which context strategies worked best? CLAUDE.md and the PRD import meant you
+    never had to re-explain the project. Splitting the work into issues kept
+    each session focused.
+
+  This should be in your own words. I can draft an outline with the facts from
+  the logs, but you and Yanni should write the opinions.
+
+  5. Check with your instructor: is it one reflection per pair or one each?
+  Yanni has 13 commits and you have 17, so either way works.
+
+  Optional: Yanni's half. #1 needs to merge before #6 can be finished (the
+  retry/fallback logic and the Server Action) and before #7 can be connected.
+  The assignment doesn't require that, but the PRD's "every story works end to
+  end" does.
+
+  Shall I annotate log 02 once you've exported it, or draft the reflection
+  outline?
+
+✻ Churned for 23s · done 8:17 PM
+
+
+>>> [CONTEXT] /export saved the first half of this session (later renamed to log
+>>> 04) before compacting, so nothing was lost from the record.
+
+❯ /export docs/session-logs/02-tdd-and-plan-mode.txt                            
+  ⎿  Conversation exported to: /Users/samuelcoe/Documents/AI Coding
+     Course/tailorfit/docs/session-logs/02-tdd-and-plan-mode.txt
+
+
+>>> [CONTEXT] /compact. The long conversation was replaced by a summary. Claude
+>>> Code then re-read the files it was working on, referenced the saved plan
+>>> file, restored the loaded skills, and remembered the dev server still
+>>> running in the background. The context window was freed up without starting
+>>> a new session.
+
+❯ /compact                                                                      
+  ⎿  Compacted (ctrl+o to see full summary)
+  ⎿  Read app/review/BulletComparison.tsx (187 lines)
+  ⎿  Read ../../../../../private/tmp/claude-501/-Users-samuelcoe-Documents-AI-Co
+     ding-Course-tailorfit/a43f1cb7-f467-490e-aa78-5ae746f775db/scratchpad/drive
+     r/drive.mjs (54 lines)
+  ⎿  Read app/review/page.tsx (19 lines)
+  ⎿  Read lib/review/bulletReview.ts (80 lines)
+  ⎿  Read lib/review/bulletReview.test.ts (142 lines)
+
+⏺ Task "Run the dev server in the background" still running in background
+  ⎿  Plan file referenced (~/.claude/plans/gentle-questing-cloud.md)
+  ⎿  Skills restored (run, superpowers:brainstorming, 
+     superpowers:test-driven-development)
+
+
+>>> [CONTEXT] My first request after compaction. I didn't re-explain anything:
+>>> the summary, CLAUDE.md, and the plan file on disk were enough for Claude to
+>>> carry on.
+
+❯ annotate log 02 once I've exported it, and draft the reflection outline       
+
+  Made 1 scratchpad edit +204, read 1 file, ran 3 shell commands (ctrl+o to expand)
+
+⏺ I'm adding the annotations to log 02. Next I'll draft the reflection outline.
+
+  Made 1 scratchpad edit +4 -2 (ctrl+o to expand)
+
+⏺ Bash(cd "/Users/samuelcoe/Documents/AI Coding Course/tailorfit" &&
+      S=/private/tmp/claude-501/-Users-samuelcoe-Documents-AI-Coding-Course-tail
+      orfit/a43f1cb7-f467-490e…)
+  ⎿  39
+     1,47d0
+     < ====================================================================
+     … +20 lines (ctrl+o to expand)
+  ⎿  1 file changed (binary, mode only or too large to show)
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Update(docs/session-logs/02-tdd-and-plan-mode.txt)
+  ⎿  Added 2 lines, removed 2 lines
+      656  >>> "flagReason" field. Use a local provisional type, and tell
+            Yanni on #1 which
+      657  >>> fields the screen needs.
+      658  >>> (2) Put the accept/edit state in a pure reducer in lib/, s
+           o it falls under
+      659 ->>> strict TDD. Planning surfaced the missing flagReason befor
+          -e any code                                                    
+      660 ->>> existed.                                                  
+      659 +>>> strict TDD.                                               
+      660 +>>> Planning surfaced the missing flagReason before any code e
+          +xisted.                                                       
+      661  
+      662  ⏺ User answered Claude's questions:
+      663    ⎿  · The rewrite result schema from #1 doesn't exist yet, an
+           d the screen needs
+
+⏺ Write(docs/reflection-outline.md)
+  ⎿  Wrote 82 lines to docs/reflection-outline.md
+      1 # Reflection outline (draft, not the final reflection)
+      3 The final reflection should be 1–2 pages, about 600–900 words. Th
+        e **Facts** under each section come from the session logs and git
+         you (and Yanni, if it's a joint reflection) to answer in your ow
+        n words. Delete this file, or rename it to `reflection.md` and re
+      4 
+      5 Evidence to point the reader to:
+        refined through an interview)
+      7 - `docs/session-logs/02-tdd-and-plan-mode.txt` (annotated: TDD, p
+      8 - `docs/plans/2026-11-22-bullet-comparison.
+     … +127 lines (ctrl+o to expand)
+
+⏺ The session log now has annotations and the reflection outline is drafted.
+  Neither is committed yet.
+
+  Annotated log: docs/session-logs/02-tdd-and-plan-mode.txt
+  - Header: says how to read the file, lists the tags, and has a timeline of all
+    17 commits from this session with their hashes.
+  - 39 notes: each starts with >>> [TAG] and sits right before the moment it
+    describes. Search for >>> [ to jump between them. They cover every red,
+    green and refactor step (with its commit), Explore, the plan-mode questions
+    and approval, your two decisions, the change to the plan's order, and the
+    port-kill block. They also cover where CLAUDE.md, the @imports and the
+    Status update supplied context.
+  - The export itself is unchanged. I checked line by line that only the header
+    and notes were added.
+  - Some output is hidden by the export. The test failures for the first two red
+    cycles were folded away ("ctrl+o to expand"), so those notes point to the
+    commit hashes instead. In the last two red cycles you can see the failing
+    tests.
+  - Gap: /compact isn't in this file because you ran it after exporting. The
+    last note says so.
+
+  Reflection outline: docs/reflection-outline.md
+  It has five sections: how you worked before, Explore → Plan → Implement →
+  Commit compared with that, TDD, context management, and what you'd do
+  differently. Each section lists Facts you can cite, taken from the logs and
+  git history, and Your take prompts for your own opinions. I didn't write any
+  opinions for you. Section 1 is all prompts, since I don't know how you worked
+  before.
+
+  Still to do:
+  1. Show --continue: start your next session with claude --continue and export
+     or screenshot it.
+  2. Write the reflection from the outline.
+  3. Check with your instructor whether it's one reflection per pair or one
+     each.
+  4. Commit both files. Shall I commit them now as docs: annotate session log 02
+     and add reflection outline?
+
+✻ Cooked for 2m 19s · done 8:22 PM
+
+❯ So now what I need to do is to write reflection and then commit them and      
+  push, right?                                                                  
+⏺ Mostly yes, with two small additions:
+
+  1. Commit the annotated log and the outline now. That way they're safe in git,
+     and you don't need to finish the reflection first. Want me to do that?
+  2. Run claude --continue once and capture it. The assignment asks you to show
+     /clear, /compact and --continue. The first two are covered, but --continue
+     isn't yet. Start your next session with it, then export or screenshot it,
+     for example to docs/session-logs/03-continue.txt. That gives you one
+     concrete line for the context section of the reflection.
+  3. Write the reflection in docs/reflection.md, using the outline. Keep it to
+     1–2 pages and write it in your own words. Delete the outline afterwards, or
+     keep it.
+  4. Commit and push: run git pull --rebase, then git push, as CLAUDE.md
+     requires.
+
+  Before you write it, check with your instructor whether it's one reflection
+  per pair or one each. If it's per pair, Yanni should add their part about the
+  setup work (Part 1).
+
+  After that, all four deliverables are in the repo:
+  - CLAUDE.md and permissions
+  - the red/green/refactor git history
+  - the annotated logs
+  - the reflection
+
+✻ Baked for 5s · done 8:24 PM
+
+❯ yes commit the log and outline now                                            
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ I committed the annotated session log and the reflection outline as 8910078
+  (docs: annotate session log 02 and add reflection outline). The working tree
+  is clean. The commit is local only, because you asked to commit, not push.
+
+  You can push it now with git pull --rebase && git push, or wait and push it
+  together with the reflection. If you push now, Yanni can see the log sooner.
+  Want me to push it?
+
+✻ Cooked for 5s · done 8:29 PM
+
+
+>>> [CONTEXT] An automatic recap after a pause. Claude Code summarises where
+>>> things stand when you come back to the session.
+
+※ recap: You're finishing the Claude Code workflow homework, and the annotated session log and reflection outline are committed locally as 8910078 but not pushed. Next, write the reflection in docs/reflection.md, then pull with rebase and push. (disable recaps in /config)
+
+
+>>> [CONTEXT] About 1.5 hours later (8:29 to 10:06 PM) I came back to the same
+>>> session. Yanni had pushed 24 commits, including #1 (the shared schemas my
+>>> work was waiting on). Claude ran `git fetch` without pulling, read the new
+>>> schemas and the CLAUDE.md diff, and spotted two things: Yanni's log numbers
+>>> clashed with mine, and she had removed the Status section from CLAUDE.md.
+
+❯ My teammate has updated some files on GitHub. Just check what she has updated 
+  and what I do.                                                                
+
+  Ran 3 shell commands (ctrl+o to expand)
+
+⏺ Yanni pushed 24 commits today. The main news is that #1 is merged and closed,
+  so your work on #6 and #7 is no longer blocked.
+
+  What Yanni added
+
+  Area: Shared schemas (#1)
+  Files: lib/types.ts
+  Notes: rewriteResultSchema now exists and includes flagged and flagReason, so
+  your comment on #1 was picked up. Two differences from your temporary type:
+  each bullet now has an id, and items have no title (it comes from the
+  experience, as your plan expected).
+  ────────────────────────────────────────
+  Area: callClaude
+  Files: lib/claude.ts, lib/config.ts
+  Notes: Exports callClaude(system, prompt) and createCallClaude(client) for
+  testing. The model name lives only in CLAUDE_MODEL.
+  ────────────────────────────────────────
+  Area: Storage
+  Files: lib/storage/
+  Notes: Saves and loads the library and the demo user's name. Bad or corrupted
+  data comes back as an empty library. Built with strict TDD, 6 cycles.
+  ────────────────────────────────────────
+  Area: Demo sign-in
+  Files: app/DemoSignIn.tsx, app/page.tsx
+  Notes: The home page is no longer template code.
+  ────────────────────────────────────────
+  Area: Setup
+  Files: package.json, lockfile, vitest.setup.ts
+  Notes: Adds the server-only package and mocks it once for all tests. The
+  lockfile changed, so the sync problem from earlier may be fixed. I'll check
+  after pulling.
+  ────────────────────────────────────────
+  Area: CLAUDE.md
+  Files:
+  Notes: She removed the Status section, and progress is now tracked in GitHub
+  issues. The "Local only" note moved under Stack.
+  ────────────────────────────────────────
+  Area: Session logs
+  Files: docs/session-logs/02-shared-schemas-and-callclaude.txt,
+  03-storage-and-demo-sign-in.txt
+  Notes:
+
+  What this means for you
+
+  1. Pull. Your local commit only adds two docs files, so git pull --rebase
+     should apply cleanly.
+  2. Renumber your session log. Yanni also used 02-, so there are now two 02
+     logs. I suggest renaming yours to 04-tdd-and-plan-mode.txt before you push.
+  3. Connect #7 to the real type. Replace ProvisionalRewriteResult with
+     RewriteResult and delete the temporary file. Bullets now have their own ID,
+     so the review should be keyed by bullet ID instead of position. That
+     changes the reducer, so it needs a red/green TDD cycle.
+  4. #6 is unblocked. It needs resumeRewriter.ts and prompts.ts, then:
+     - checking Claude's response with Zod, and retrying once if it fails
+     - running the no-invention check, retrying once with feedback, and if it
+       still fails, keeping the original bullet and flagging it
+     - the Server Action
+
+     All with strict TDD and a mocked callClaude. This is the biggest remaining
+     piece.
+  5. Stop updating CLAUDE.md's Status section. It's gone now; post progress on
+     issues #6 and #7 instead.
+  6. Then the reflection. Yanni's 02 and 03 logs give her material for her part,
+     if you write it together.
+
+  Shall I pull, rename your log and push, then start the #7 type swap as a TDD
+  cycle?
+
+✻ Brewed for 39s · done 10:06 PM
+
+
+>>> [HUMAN] I ran the pull myself with the "!" prefix (bash mode), so its output
+>>> landed in the conversation where Claude could see it.
+
+! git pull --rebase                                                             
+  ⎿  Rebasing (1/1)Successfully rebased and updated refs/heads/main.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ The rebase is done and all 51 tests pass, though the server-only package isn't
+  installed locally and the tests only pass because they mock it. I'm checking
+  next whether Yanni's lockfile fixes the earlier install problem.
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+
+>>> [PERMISSIONS] package-lock.json was still out of sync. Claude again
+>>> installed with --no-save rather than rewriting a shared file on its own, and
+>>> left the fix for Yanni and me to agree on.
+
+⏺ The lockfile is still out of sync: Yanni's update didn't add the missing
+  @emnapi entries. I'll install without changing the shared lockfile, as before.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ The pull went through, and everything works on top of Yanni's changes.
+
+  - Rebase: your log and outline commit is now f4ad1a3, sitting on top of her 24
+    commits. It's still local only.
+  - Tests: 51 of 51 pass, covering your validation and review code and her
+    schemas, callClaude and storage.
+  - Build: npm run build passes. / (her sign-in page) and /review (your
+    comparison screen) both build.
+  - Dependencies: server-only wasn't installed on your machine, so I ran npm 
+    install --no-save. That leaves package-lock.json untouched.
+
+  The lockfile is still broken. npm ci fails with Missing: 
+  @emnapi/runtime@1.11.3 from lock file, so a fresh clone can't install cleanly.
+  One of you needs to run npm install, commit the updated lockfile as chore: 
+  sync package-lock.json, and push. Tell Yanni so you don't both do it. I can do
+  it now if you'd like.
+
+  Next steps:
+  1. Rename your log to docs/session-logs/04-tdd-and-plan-mode.txt, since
+     Yanni's logs now use 02 and 03, and push.
+  2. Switch #7 from the provisional type to RewriteResult, with the review keyed
+     by bullet ID and done as a red/green cycle.
+  3. Build #6, the rewriter.
+
+  Want me to do 1 now, along with the lockfile fix if you've cleared it with
+  Yanni?
+
+✻ Cogitated for 36s · done 10:08 PM
+
+❯ I have pulled, so just rename my log and push and then start number 7 times   
+  swap as a TDD cycle.                                                          
+
+  Ran 1 shell command (ctrl+o to expand)
+
+
+>>> [COMMIT] My log is renamed from 02 to 04 to avoid clashing with Yanni's 02
+>>> and 03, and the outline is updated to match (40e94d3). Then pull --rebase
+>>> and push.
+
+⏺ Bash(cd "/Users/samuelcoe/Documents/AI Coding Course/tailorfit" && git mv
+      docs/session-logs/02-tdd-and-plan-mode.txt
+      docs/session-logs/04-tdd-and-plan-mode.txt && F=…)
+  ⎿  ======================================================================
+     ==========
+     ANNOTATED SESSION LOG 04: TDD (Part 3) and Explore -> Plan -> Implemen
+     … +17 lines (ctrl+o to expand)
+  ⎿  2 files changed (binary, mode only or too large to show)
+
+⏺ Bash(cd "/Users/samuelcoe/Documents/AI Coding Course/tailorfit" && sed -i ''
+      -e 's|`docs/session-logs/02-tdd-and-plan-mode.txt` (annotated: TDD, plan
+      mode, permissio…)
+  ⎿  7:- `docs/session-logs/02-shared-schemas-and-callclaude.txt` and `03-s
+     torage-and-demo-sign-in.txt` (Yanni: #1, TDD on schemas, callClaude, s
+     torage)
+     … +17 lines (ctrl+o to expand)
+  ⎿  Updated docs/reflection-outline.md (+5 -4)
+  ⎿  (a git step in this command can move the working tree, so these may be
+     its changes, not edits) (ctrl+o to expand)
+
+
+>>> [IMPLEMENT] Before writing the test, Claude states its design choices as
+>>> proposals I could change: titles come from the experiences, bullets are
+>>> keyed by item and bullet ID, and an unknown ID throws.
+
+⏺ Pushed both commits; next is the #7 type swap. I've chosen to take title and
+  organization from the matching experience, key reviews by itemId:bulletId, and
+  throw on unknown item IDs. Tell me if you want any of that changed, and I'll
+  write the failing test first.
+
+
+>>> [RED] #7 type swap. The tests switch to Yanni's RewriteResult and Experience
+>>> types. 10 of 11 fail on assertions for the expected reasons
+>>> (old position-based keys, no title lookup, nothing thrown). Commit d7665fb.
+
+⏺ Bash(cd "/Users/samuelcoe/Documents/AI Coding Course/tailorfit" && python3 -I
+      - <<'EOF'
+      p = "lib/review/bulletReview.test.ts"…)
+  ⎿  16:    title: "Item A",
+     28:    title: "Item B",
+     60:  return initReview(result, experiences);
+     … +17 lines (ctrl+o to expand)
+  ⎿  Updated lib/review/bulletReview.test.ts (+74 -29)
+      1  import { describe, expect, it } from "vitest";
+      2 +import type { Experience, RewriteResult } from "@/lib/types";   
+      3  import {
+      4    finalBullets,
+      5    initReview,
+     ...
+       8    type ReviewAction,
+       9    type ReviewState,
+      10  } from "./bulletReview";
+      10 -import type { ProvisionalRewriteResult } from "./provisionalRew
+         -rite";                                                         
+      11  
+      12 -const result: ProvisionalRewriteResult = {                     
+      12 +const experiences: Experience[] = [                            
+      13 +  {                                                            
+      14 +    id: "a",                                                   
+      15 +    type: "experience",                                        
+      16 +    title: "Item A",                                           
+      17 +    organization: "Org A",                                     
+      18 +    startDate: "2025-01",                                      
+      19 +    endDate: null,                                             
+      20 +    bullets: [                                                 
+      21 +      { id: "a1", text: "Did x" },                             
+      22 +      { id: "a2", text: "Did y" },                             
+      23 +    ],                                                         
+      24 +  },                                                           
+      25 +  {                                                            
+      26 +    id: "b",                                                   
+      27 +    type: "project",                                           
+      28 +    title: "Item B",                                           
+      29 +    startDate: "2024-09",                                      
+      30 +    endDate: "2024-12",                                        
+      31 +    bullets: [{ id: "b1", text: "Did z" }],                    
+      32 +  },                                                           
+      33 +];                                                             
+      34 +                                                               
+      35 +const result: RewriteResult = {                                
+      36    items: [
+      37      {
+      38        id: "a",
+      16 -      title: "Item A",                                         
+      39        bullets: [
+     … 153 more lines (ctrl+o to expand)
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+⏺ Every failure comes from an assertion, for the expected reasons: the keys are
+  still based on position, there's no title lookup, and nothing throws.
+  Committing the red step:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+
+>>> [GREEN] Only bulletReview.ts changes, and all 53 tests pass. Commit 2d9dfb6.
+
+⏺ Green: change only bulletReview.ts.
+
+⏺ Update(lib/review/bulletReview.ts)
+  ⎿  Added 2 lines, removed 1 line
+      1 -import type { ProvisionalRewriteResult } from "./provisionalRewr
+        -ite";                                                           
+      1 +import type { Experience, RewriteResult } from "@/lib/types";   
+      2  
+      3  export type ReviewBullet = {
+      4    key: string;
+      5 +  id: string;                                                   
+      6    original: string;
+      7    rewritten: string;
+      8    flagged: boolean;
+
+⏺ Update(lib/review/bulletReview.ts)
+  ⎿  Added 6 lines, removed 1 line
+      12  };
+      13  
+      14  export type ReviewState = {
+      15 -  items: { id: string; title: string; bullets: ReviewBullet[] }
+         -[];                                                            
+      15 +  items: {                                                     
+      16 +    id: string;                                                
+      17 +    title: string;                                             
+      18 +    organization?: string;                                     
+      19 +    bullets: ReviewBullet[];                                   
+      20 +  }[];                                                         
+      21  };
+      22  
+      23  export type ReviewAction =
+
+⏺ Update(lib/review/bulletReview.ts)
+  ⎿  Added 21 lines, removed 11 lines
+      24    | { type: "accept"; key: string }
+      25    | { type: "edit"; key: string; text: string };
+      26  
+      27 -export function initReview(result: ProvisionalRewriteResult): R
+         -eviewState {                                                   
+      27 +export function initReview(                                    
+      28 +  result: RewriteResult,                                       
+      29 +  experiences: Experience[],                                   
+      30 +): ReviewState {                                               
+      31    return {
+      29 -    items: result.items.map((item) => ({                       
+      30 -      id: item.id,                                             
+      31 -      title: item.title,                                       
+      32 -      bullets: item.bullets.map((b, i) => ({                   
+      33 -        ...b,                                                  
+      34 -        key: `${item.id}:${i}`,                                
+      35 -        status: "pending",                                     
+      36 -        finalText: null,                                       
+      37 -      })),                                                     
+      38 -    })),                                                       
+      32 +    items: result.items.map((item) => {                        
+      33 +      const experience = experiences.find((e) => e.id === item.
+         +id);                                                           
+      34 +      if (!experience) {                                       
+      35 +        throw new Error(`Unknown experience ID "${item.id}"`); 
+      36 +      }                                                        
+      37 +      return {                                                 
+      38 +        id: item.id,                                           
+      39 +        title: experience.title,                               
+      40 +        organization: experience.organization,                 
+      41 +        bullets: item.bullets.map((b) => ({                    
+      42 +          ...b,                                                
+      43 +          key: `${item.id}:${b.id}`,                           
+      44 +          status: "pending",                                   
+      45 +          finalText: null,                                     
+      46 +        })),                                                   
+      47 +      };                                                       
+      48 +    }),                                                        
+      49    };
+      50  }
+      51  
+
+  Ran 1 shell command (ctrl+o to expand)
+⏺ All 53 tests pass, and only bulletReview.ts changed. Committing the green
+  step:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+
+>>> [REFACTOR] The fixture, page, and component move to the shared types, and
+>>> the provisional type is deleted. Commit 9c5da05. Note: /review doesn't build
+>>> at the green commit by itself, but the two were pushed together, so main on
+>>> GitHub was never broken.
+
+⏺ Now I'll switch the fixture, page and component over to the shared types and
+  delete the provisional type:
+
+⏺ Write(lib/review/sampleRewrite.ts)
+  ⎿  Added 37 lines, removed 4 lines
+       1 -import type { ProvisionalRewriteResult } from "./provisionalRew
+         -rite";                                                         
+       1 +import type { Experience, RewriteResult } from "@/lib/types";  
+       2  
+       3  // Fictional person (Maya Okafor) and employers, tailored to a 
+          made-up data
+       4  // analyst internship. Used to build the comparison screen befo
+          re the
+       5  // rewriter's Server Action exists.
+       6 -export const sampleRewrite: ProvisionalRewriteResult = {       
+       6 +export const sampleExperiences: Experience[] = [               
+       7 +  {                                                            
+       8 +    id: "exp-library",                                         
+       9 +    type: "experience",                                        
+      10 +    title: "Program Assistant",                                
+      11 +    organization: "Brightwater Community Library",             
+      12 +    startDate: "2024-06",                                      
+      13 +    endDate: null,                                             
+      14 +    bullets: [                                                 
+      15 +      { id: "lib-1", text: "Tracked attendance for weekend read
+         +ing programs" },                                               
+      16 +      {                                                        
+      17 +        id: "lib-2",                                           
+      18 +        text: "Made a spreadsheet showing which programs were m
+         +ost popular",                                                  
+      19 +      },                                                       
+      20 +      { id: "lib-3", text: "Helped 40 families sign up for libr
+         +ary cards" },                                                  
+      21 +    ],                                                         
+      22 +  },                                                           
+      23 +  {                                                            
+      24 +    id: "proj-transit",                                        
+      25 +    type: "project",                                           
+      26 +    title: "Bus Delay Explorer (class project)",               
+      27 +    startDate: "2025-01",                                      
+      28 +    endDate: "2025-04",                                        
+      29 +    bullets: [                                                 
+      30 +      { id: "bus-1", text: "Cleaned a public bus arrival datase
+         +t in Python" },                                                
+      31 +      { id: "bus-2", text: "Made charts of which routes were la
+         +te most often" },                                              
+      32 +    ],                                                         
+      33 +  },                                                           
+      34 +];                                                             
+      35 +                                                               
+      36 +export const sampleRewrite: RewriteResult = {                  
+      37    items: [
+      38      {
+      39        id: "exp-library",
+      10 -      title: "Program Assistant, Brightwater Community Library"
+         -,                                                              
+      40        bullets: [
+      41          {
+      42 +          id: "lib-1",                                         
+      43            original: "Tracked attendance for weekend reading pro
+          grams",
+      44            rewritten:
+      45              "Collected and organized attendance data for weeken
+          d reading programs",
+      46            flagged: false,
+      47          },
+      48          {
+      49 +          id: "lib-2",                                         
+      50            original: "Made a spreadsheet showing which programs 
+          were most popular",
+      51            rewritten:
+      52              "Built a spreadsheet report comparing program popul
+          arity to guide scheduling",
+      53            flagged: false,
+      54          },
+      55          {
+      56 +          id: "lib-3",                                         
+      57            original: "Helped 40 families sign up for library car
+          ds",
+      58            rewritten: "Guided 40 families through library card r
+          egistration",
+      59            flagged: false,
+     ...
+      62      },
+      63      {
+      64        id: "proj-transit",
+      33 -      title: "Bus Delay Explorer (class project)",             
+      65        bullets: [
+      66          {
+      67 +          id: "bus-1",                                         
+      68            original: "Cleaned a public bus arrival dataset in Py
+          thon",
+      69            rewritten:
+      70              "Cleaned and validated a public bus arrival dataset
+           using Python",
+      71            flagged: false,
+      72          },
+      73          {
+      74 +          id: "bus-2",                                         
+      75            original: "Made charts of which routes were late most
+           often",
+      76            rewritten: "Made charts of which routes were late mos
+          t often",
+      77            flagged: true,
+
+⏺ Update(app/review/page.tsx)
+  ⎿  Added 1 line, removed 1 line
+      1 -import { sampleRewrite } from "@/lib/review/sampleRewrite";     
+      1 +import { sampleExperiences, sampleRewrite } from "@/lib/review/s
+        +ampleRewrite";                                                  
+      2  import { BulletComparison } from "./BulletComparison";
+      3  
+      4  // Uses fixture data until the rewriter's Server Action exists (
+         #6).
+
+⏺ Update(app/review/page.tsx)
+  ⎿  Added 4 lines, removed 1 line
+      12            so it still sounds like you.
+      13          </p>
+      14        </header>
+      15 -      <BulletComparison result={sampleRewrite} />              
+      15 +      <BulletComparison                                        
+      16 +        result={sampleRewrite}                                 
+      17 +        experiences={sampleExperiences}                        
+      18 +      />                                                       
+      19      </main>
+      20    );
+      21  }
+
+⏺ Update(app/review/BulletComparison.tsx)
+  ⎿  Added 1 line, removed 1 line
+       8    reviewReducer,
+       9    type ReviewBullet,
+      10  } from "@/lib/review/bulletReview";
+      11 -import type { ProvisionalRewriteResult } from "@/lib/review/pro
+         -visionalRewrite";                                              
+      11 +import type { Experience, RewriteResult } from "@/lib/types";  
+      12  
+      13  const statusStyles: Record<ReviewBullet["status"], string> = {
+      14    pending: "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:tex
+          t-zinc-300",
+
+⏺ Update(app/review/BulletComparison.tsx)
+  ⎿  Added 6 lines, removed 2 lines
+      22  
+      23  export function BulletComparison({
+      24    result,
+      25 +  experiences,                                                 
+      26  }: {
+      26 -  result: ProvisionalRewriteResult;                            
+      27 +  result: RewriteResult;                                       
+      28 +  experiences: Experience[];                                   
+      29  }) {
+      28 -  const [state, dispatch] = useReducer(reviewReducer, result, i
+         -nitReview);                                                    
+      30 +  const [state, dispatch] = useReducer(reviewReducer, null, () 
+         +=>                                                             
+      31 +    initReview(result, experiences),                           
+      32 +  );                                                           
+      33    const [editing, setEditing] = useState<{ key: string; text: s
+          tring } | null>(
+      34      null,
+      35    );
+
+⏺ Update(app/review/BulletComparison.tsx)
+  ⎿  Added 8 lines, removed 1 line
+      52  
+      53        {state.items.map((item) => (
+      54          <section key={item.id} className="flex flex-col gap-3">
+      55 -          <h2 className="text-lg font-semibold">{item.title}</h
+         -2>                                                             
+      55 +          <h2 className="text-lg font-semibold">               
+      56 +            {item.title}                                       
+      57 +            {item.organization && (                            
+      58 +              <span className="font-normal text-zinc-600 dark:t
+         +ext-zinc-400">                                                 
+      59 +                , {item.organization}                          
+      60 +              </span>                                          
+      61 +            )}                                                 
+      62 +          </h2>                                                
+      63  
+      64            <div className="hidden grid-cols-2 gap-4 px-4 text-xs
+           font-medium uppercase tracking-wide text-zinc-500 sm:grid">
+      65              <span>Original</span>
+
+⏺ Bash(cd "/Users/samuelcoe/Documents/AI Coding Course/tailorfit" && git rm -q
+      lib/review/provisionalRewrite.ts && grep -rn
+      "provisionalRewrite\|ProvisionalRewrite" ap…)
+  ⎿  docs/plans/2026-11-22-bullet-comparison.md:18:**Provisional type**: `l
+     ib/review/provisionalRewrite.ts` (header comment: replace with `z.infe
+     r` from `lib/types.ts` once #1 merges)
+     … +8 lines (ctrl+o to expand)
+  ⎿  Deleted lib/review/provisionalRewrite.ts (+0 -15)
+       1 -// Provisional shape of the rewrite result until #1 adds the re
+         -al Zod schema                                                  
+       2 -// to lib/types.ts. Replace this with the z.infer type once it 
+         -merges.                                                        
+       3 -// `title` comes from the selected experience, merged in at int
+         -egration.                                                      
+       4 -export type ProvisionalRewriteResult = {                       
+       5 -  items: {                                                     
+       6 -    id: string;                                                
+       7 -    title: string;                                             
+       8 -    bullets: {                                                 
+       9 -      original: string;                                        
+      10 -      rewritten: string;                                       
+      11 -      flagged: boolean;                                        
+      12 -      flagReason?: string;                                     
+      13 -    }[];                                                       
+      14 -  }[];                                                         
+      15 -};                                                             
+  ⎿  (timeout 5m)
+
+
+>>> [VERIFY] Tests, lint, and build pass, and the headless browser check is
+>>> rerun (14 of 14). Claude also looks at the screenshot.
+
+⏺ Tests, lint and build all pass. The plan doc still mentions the provisional
+  type, but I'm leaving it as a record of the original plan. Next I'll re-run
+  the browser check against the dev server:
+
+  Read 1 file, ran 1 shell command (ctrl+o to expand)
+
+⏺ The page renders correctly, and the organization now comes from the
+  experience. Committing, pushing, and updating #7:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Your session log is renamed and pushed, and #7 now uses the shared types from
+  #1.
+
+  Log rename (40e94d3): your log is now
+  docs/session-logs/04-tdd-and-plan-mode.txt, because Yanni's logs use 02 and
+  03. I updated its header and the outline's references to match, and added
+  Yanni's two logs to the outline's evidence list.
+
+  #7 type swap: red → green → refactor, pushed
+
+  Commit: d7665fb
+  Step: [red]
+  What changed: The tests now use the real RewriteResult and Experience types.
+  Bullets are keyed by item ID plus bullet ID, the title and organization come
+  from the matching experience, and an unknown ID throws an error. 10 of 11
+  tests failed on their assertions for the expected reasons.
+  ────────────────────────────────────────
+  Commit: 2d9dfb6
+  Step: [green]
+  What changed: Only bulletReview.ts changed; the tests were left alone. All 53
+  tests pass.
+  ────────────────────────────────────────
+  Commit: 9c5da05
+  Step: refactor
+  What changed: The screen and sample data now use the shared types. Each
+  experience now carries Brightwater Community Library as its organization,
+  shown next to the title. provisionalRewrite.ts is deleted.
+
+  Checks: all 53 tests pass, and lint and build pass. The browser check also
+  passed 14 of 14 with no console errors, and the screenshot looks right. I
+  posted a progress comment on #7.
+
+  One thing to know: /review doesn't build in the green commit (2d9dfb6) on its
+  own. The page still used the old type until the refactor commit fixed it. Both
+  were pushed together, so main was never broken on GitHub.
+
+  What's left on #7: connecting /review to the rewriter's Server Action, which
+  is part of #6.
+
+  Still open:
+  - #6, the rewriter: prompts, checking Claude's reply with Zod, retrying once
+    with feedback when the no-invention check fails, and the Server Action. Each
+    piece needs a red/green cycle with callClaude mocked.
+  - Lockfile: still out of sync. Agree with Yanni who commits the fix.
+  - claude --continue: use it next session and save the log as evidence.
+  - Reflection: still to write.
+
+  Want me to start #6 with its first red test?
+
+✻ Churned for 2m 11s · done 10:12 PM
+
+
+>>> [HUMAN] I start #6, which #1's merge has now unblocked.
+
+❯ yes start #6 with the first red test                                          
+
+  Ran 1 shell command (ctrl+o to expand)
+
+
+>>> [RED] Rewriter cycle 1 (success path). The test defines the interface:
+>>> rewriteResume({ experiences, jobDescription }, callClaude) returns { ok,
+>>> result } or { ok: false, error }, with callClaude mocked (dependency
+>>> injection from CLAUDE.md). It fails because resumeRewriter.ts doesn't exist
+>>> yet. Commit 296c4e0.
+
+⏺ Cycle 1 covers only the success path: one call that sends the job description
+  and bullets and turns the reply into a RewriteResult. Later cycles add retries
+  and error handling, and I'm checking with you on the interface decisions
+  before I write any code.
+
+⏺ Write(lib/pipeline/resumeRewriter.test.ts)
+  ⎿  Wrote 87 lines to lib/pipeline/resumeRewriter.test.ts
+       1 import { describe, expect, it, vi } from "vitest";
+       2 import type { CallClaude } from "@/lib/claude";
+       3 import type { Experience } from "@/lib/types";
+       4 import { rewriteResume } from "./resumeRewriter";
+       5 
+       6 // Fictional person and employer.
+       7 const experiences: Experience[] = [
+       8   {
+       9     id: "exp-cafe",
+      10     type: "experience",
+     … +86 lines (ctrl+o to expand)
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ It fails for the right reason: resumeRewriter.ts doesn't exist yet. Checking
+  that lint passes and the rest of the suite still passes, then committing:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ I've committed the first red test for #6 as 296c4e0. It's local only, not
+  pushed.
+
+  The test is in lib/pipeline/resumeRewriter.test.ts, and both cases use a
+  mocked callClaude, so there are no API calls:
+  1. The job description and every bullet (ID and text) go to Claude in a single
+     call.
+  2. Claude's reply, { items: [{ id, bullets: [{ id, rewritten }] }] }, is
+     matched up with the original bullets. The result is { ok: true, result } in
+     the RewriteResult shape, with nothing flagged.
+
+  The new test file fails because resumeRewriter.ts doesn't exist yet. Lint is
+  clean, and the 53 existing tests still pass.
+
+  Next, the green step:
+  - lib/pipeline/prompts.ts: the rewriter's system prompt and a function that
+    builds the user prompt. CLAUDE.md says prompts must live there, not inline.
+  - lib/pipeline/resumeRewriter.ts: the smallest rewriteResume that makes this
+    test pass. It will check Claude's reply against a small Zod schema, which
+    types.ts says belongs in the rewriter.
+
+  The retry and flag behaviour will come in the later red cycles, not in this
+  green step. Shall I go green?
+
+✻ Crunched for 45s · done 10:14 PM
+
+
+>>> [CONTEXT] Another automatic recap after a short pause.
+
+※ recap: You're finishing your share of the TailorFit assignment, and I just committed the first red test for the #6 resume rewriter (not pushed yet). Next is the green step: the smallest resumeRewriter.ts and prompts.ts that pass it, once you say go. (disable recaps in /config)
+
+❯  go green                                                                     
+
+
+>>> [GREEN] Claude corrects its own earlier plan here. It had said green would
+>>> include the Zod check, but no test covered that yet, so the check waited for
+>>> the next red cycle. Prompts go in prompts.ts as CLAUDE.md requires. Commit
+>>> 4904966.
+
+⏺ Going green. One adjustment to what I said last time: this test doesn't cover
+  malformed replies, so the Zod check of the reply waits for the next red cycle.
+  Adding it now would be untested code. Green is just enough to pass.
+
+⏺ Write(lib/pipeline/prompts.ts)
+  ⎿  Wrote 30 lines to lib/pipeline/prompts.ts
+      1 import type { Experience } from "@/lib/types";
+      3 export const REWRITER_SYSTEM_PROMPT = `You rewrite resume bullet 
+        points so they read as relevant to a specific job description.
+      4 
+      6 - Rewrite every bullet you are given, exactly once, keeping its i
+        d.
+        he bullet already says.
+      8 - Never add skills, tools, employers, or numbers that are not in 
+        the original bullet.
+        iginal.
+     … +25 lines (ctrl+o to expand)
+
+⏺ Write(lib/pipeline/resumeRewriter.ts)
+  ⎿  Wrote 42 lines to lib/pipeline/resumeRewriter.ts
+       1 import "server-only";
+       2 import type { CallClaude } from "@/lib/claude";
+       3 import type { Experience, RewriteResult } from "@/lib/types";
+       4 import { buildRewritePrompt, REWRITER_SYSTEM_PROMPT } from "./pr
+         ompts";
+       6 export type RewriteOutcome =
+       7   | { ok: true; result: RewriteResult }
+       8   | { ok: false; error: string };
+       9 
+      10 type ClaudeRewrite = {
+     … +36 lines (ctrl+o to expand)
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Everything passes: 55 of 55 tests, lint, and build. The test file was not
+  touched. Committing the green step:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ The green step for #6 is committed as 4904966; it's local only, not pushed
+  yet. All 55 tests pass, along with lint and the build, and I didn't change the
+  test file.
+
+  What I added
+  - lib/pipeline/prompts.ts holds the rewriter prompts:
+    - The system prompt tells Claude to rewrite every bullet once and keep its
+      ID. It should borrow the job description's wording where it honestly fits,
+      never add skills, tools, employers or numbers, and reply with JSON only.
+    - buildRewritePrompt() puts the job description and the experiences, with
+      bullet IDs and text, inside tags.
+  - lib/pipeline/resumeRewriter.ts holds rewriteResume():
+    - It makes one call to Claude, parses the JSON, and pairs each rewrite with
+      its original bullet.
+    - It works from the experiences rather than from Claude's reply, so the
+      original text and order always come from your data.
+
+  Untested so far:
+  - If Claude leaves out a bullet, the rewrite currently becomes an empty
+    string. That's only there so the code compiles; the dropped-bullet test
+    cycle will replace it with a real retry.
+  - The prompt wording isn't checked by the tests. How well the rewrites read
+    will only show up in manual runs.
+
+  No refactor commit: the code is short and clear, so there was nothing worth
+  cleaning up.
+
+  Next red cycles for #6:
+  1. Bad JSON or a reply that fails the Zod check: retry once, then return an
+     error.
+  2. Unknown or missing experience or bullet IDs: retry once, then return an
+     error.
+  3. A no-invention failure: retry with feedback that names the problem. If it
+     still fails, keep the original bullet, flag it, and keep the other
+     rewrites.
+  4. The Server Action that connects this to /review.
+
+  Shall I start cycle 1, or push what's committed first?
+
+✻ Brewed for 35s · done 10:19 PM
+
+
+>>> [COMMIT] [HUMAN] Push, then rewriter cycle 2.
+
+❯ push what's committed first, then start cycle 1                               
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ The push to origin/main at 4904966 succeeded with all 55 tests passing after
+  the rebase. Next I'm checking that the replies match the schema exactly,
+  before I conclude there's a JSON or Zod failure in cycle 1.
+
+
+>>> [RED] Rewriter cycle 2: non-JSON, a missing field, or an empty rewrite is
+>>> retried once. Two bad replies return an error, and a test checks that the
+>>> error doesn't include Claude's text (CLAUDE.md: never log Claude responses).
+>>> All 4 fail with no retry in place. Commit c809f9a.
+
+⏺ Update(lib/pipeline/resumeRewriter.test.ts)
+  ⎿  Added 6 lines
+      38    ],
+      39  };
+      40  
+      41 +function claudeReturnsInOrder(...texts: string[]) {            
+      42 +  const callClaude = vi.fn<CallClaude>();                      
+      43 +  texts.forEach((t) => callClaude.mockResolvedValueOnce(t));   
+      44 +  return callClaude;                                           
+      45 +}                                                              
+      46 +                                                               
+      47  describe("rewriteResume — valid response", () => {
+      48    it("sends the job description and every bullet to Claude in o
+          ne call", async () => {
+      49      const callClaude = claudeReturns(validResponse);
+
+⏺ Bash(cd "/Users/samuelcoe/Documents/AI Coding Course/tailorfit" && cat >>
+      lib/pipeline/resumeRewriter.test.ts <<'EOF'…)
+  ⎿       × retries once when the response is not JSON, and uses the retry
+     1ms
+          × retries once when the response does not match the schema 0ms
+     … +10 lines (ctrl+o to expand)
+  ⎿  Updated lib/pipeline/resumeRewriter.test.ts (+53 -0)
+       91      });
+       92    });
+       93  });
+       94 +                                                              
+       95 +describe("rewriteResume — invalid response", () => {          
+       96 +  const valid = JSON.stringify(validResponse);                
+       97 +                                                              
+       98 +  it("retries once when the response is not JSON, and uses the
+          + retry", async () => {                                        
+       99 +    const callClaude = claudeReturnsInOrder("Sure! Here are yo
+          +ur bullets.", valid);                                         
+      100 +                                                              
+      101 +    const outcome = await rewriteResume({ experiences, jobDesc
+          +ription }, callClaude);                                       
+      102 +                                                              
+      103 +    expect(callClaude).toHaveBeenCalledTimes(2);              
+      104 +    expect(outcome.ok).toBe(true);                            
+      105 +  });                                                         
+      106 +                                                              
+      107 +  it("retries once when the response does not match the schema
+          +", async () => {                                              
+      108 +    const missingBullets = JSON.stringify({ items: [{ id: "exp
+          +-cafe" }] });                                                 
+      109 +    const callClaude = claudeReturnsInOrder(missingBullets, va
+          +lid);                                                         
+      110 +                                                              
+      111 +    const outcome = await rewriteResume({ experiences, jobDesc
+          +ription }, callClaude);                                       
+      112 +                                                              
+      113 +    expect(callClaude).toHaveBeenCalledTimes(2);              
+      114 +    expect(outcome.ok).toBe(true);                            
+      115 +  });                                                         
+      116 +                                                              
+      117 +  it("treats an empty rewrite as a schema failure", async () =
+          +> {                                                           
+      118 +    const emptyRewrite = JSON.stringify({                     
+      119 +      items: [                                                
+      120 +        {                                                     
+      121 +          id: "exp-cafe",                                     
+      122 +          bullets: [                                          
+      123 +            { id: "cafe-1", rewritten: "" },                  
+      124 +            { id: "cafe-2", rewritten: "Onboarded 3 new staff 
+          +members" },                                                   
+      125 +          ],                                                  
+      126 +        },                                                    
+      127 +      ],                                                      
+      128 +    });                                                       
+      129 +    const callClaude = claudeReturnsInOrder(emptyRewrite, vali
+          +d);                                                           
+      130 +                                                              
+     … 16 more lines (ctrl+o to expand)
+
+⏺ All four new tests fail for the expected reasons, and the two older tests
+  still pass. I'm committing this red step next.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+
+>>> [GREEN] A small Zod schema for Claude's reply plus one retry. Commit
+>>> 7e59974.
+
+⏺ Going green: the reply is checked against a small Zod schema, with one retry.
+
+⏺ Write(lib/pipeline/resumeRewriter.ts)
+  ⎿  Added 35 lines, removed 8 lines
+      1  import "server-only";
+      2 +import { z } from "zod";                                        
+      3  import type { CallClaude } from "@/lib/claude";
+      4  import type { Experience, RewriteResult } from "@/lib/types";
+      5  import { buildRewritePrompt, REWRITER_SYSTEM_PROMPT } from "./pr
+         ompts";
+     ...
+       8    | { ok: true; result: RewriteResult }
+       9    | { ok: false; error: string };
+      10  
+      10 -type ClaudeRewrite = {                                         
+      11 -  items: { id: string; bullets: { id: string; rewritten: string
+         - }[] }[];                                                      
+      12 -};                                                             
+      11 +// Claude's raw response. `original` and `flagged` are added by
+         + our code.                                                     
+      12 +const claudeRewriteSchema = z.object({                         
+      13 +  items: z.array(                                              
+      14 +    z.object({                                                 
+      15 +      id: z.string().min(1),                                   
+      16 +      bullets: z.array(                                        
+      17 +        z.object({                                             
+      18 +          id: z.string().min(1),                               
+      19 +          rewritten: z.string().min(1),                        
+      20 +        }),                                                    
+      21 +      ),                                                       
+      22 +    }),                                                        
+      23 +  ),                                                           
+      24 +});                                                            
+      25  
+      26  export async function rewriteResume(
+      27    input: { experiences: Experience[]; jobDescription: string },
+      28    callClaude: CallClaude,
+      29  ): Promise<RewriteOutcome> {
+      18 -  const text = await callClaude(                               
+      19 -    REWRITER_SYSTEM_PROMPT,                                    
+      20 -    buildRewritePrompt(input.experiences, input.jobDescription)
+         -,                                                              
+      21 -  );                                                           
+      22 -  const response = JSON.parse(text) as ClaudeRewrite;          
+      30 +  const prompt = buildRewritePrompt(input.experiences, input.jo
+         +bDescription);                                                 
+      31  
+      32 +  let response: z.infer<typeof claudeRewriteSchema> | undefined
+         +;                                                              
+      33 +  for (let attempt = 0; attempt < 2 && !response; attempt++) { 
+      34 +    const text = await callClaude(REWRITER_SYSTEM_PROMPT, promp
+         +t);                                                            
+      35 +    let json: unknown;                                         
+      36 +    try {                                                      
+      37 +      json = JSON.parse(text);                                 
+      38 +    } catch {                                                  
+      39 +      continue;                                                
+      40 +    }                                                          
+      41 +    const parsed = claudeRewriteSchema.safeParse(json);        
+      42 +    if (parsed.success) response = parsed.data;                
+      43 +  }                                                            
+      44 +  if (!response) {                                             
+      45 +    return {                                                   
+      46 +      ok: false,                                               
+      47 +      error: "Claude returned an invalid rewrite response twice
+         +",                                                             
+      48 +    };                                                         
+      49 +  }                                                            
+      50 +                                                               
+      51    return {
+      52      ok: true,
+      53      result: {
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+
+>>> [REFACTOR] Split into parseClaudeRewrite, requestRewrite, and
+>>> toRewriteResult, ready for the next checks. Commit a9e9e9b.
+
+⏺ Refactor: the next two cycles add more checks to the same retry loop, so I'll
+  split "one valid response from Claude" and "build the result" into separate
+  helpers now.
+
+⏺ Update(lib/pipeline/resumeRewriter.ts)
+  ⎿  Added 55 lines, removed 33 lines
+      23    ),
+      24  });
+      25  
+      26 +type ClaudeRewrite = z.infer<typeof claudeRewriteSchema>;      
+      27 +                                                               
+      28 +function parseClaudeRewrite(text: string): ClaudeRewrite | unde
+         +fined {                                                        
+      29 +  let json: unknown;                                           
+      30 +  try {                                                        
+      31 +    json = JSON.parse(text);                                   
+      32 +  } catch {                                                    
+      33 +    return undefined;                                          
+      34 +  }                                                            
+      35 +  const parsed = claudeRewriteSchema.safeParse(json);          
+      36 +  return parsed.success ? parsed.data : undefined;             
+      37 +}                                                              
+      38 +                                                               
+      39 +// Calls Claude up to twice, returning the first response that 
+         +parses.                                                        
+      40 +async function requestRewrite(                                 
+      41 +  callClaude: CallClaude,                                      
+      42 +  prompt: string,                                              
+      43 +): Promise<ClaudeRewrite | undefined> {                        
+      44 +  for (let attempt = 0; attempt < 2; attempt++) {              
+      45 +    const response = parseClaudeRewrite(                       
+      46 +      await callClaude(REWRITER_SYSTEM_PROMPT, prompt),        
+      47 +    );                                                         
+      48 +    if (response) return response;                             
+      49 +  }                                                            
+      50 +  return undefined;                                            
+      51 +}                                                              
+      52 +                                                               
+      53 +// Builds the result from the experiences, so originals and ord
+         +er always come                                                 
+      54 +// from the user's data rather than from Claude.               
+      55 +function toRewriteResult(                                      
+      56 +  experiences: Experience[],                                   
+      57 +  response: ClaudeRewrite,                                     
+      58 +): RewriteResult {                                             
+      59 +  return {                                                     
+      60 +    items: experiences.map((experience) => {                   
+      61 +      const item = response.items.find((i) => i.id === experien
+         +ce.id);                                                        
+      62 +      return {                                                 
+      63 +        id: experience.id,                                     
+      64 +        bullets: experience.bullets.map((bullet) => ({         
+      65 +          id: bullet.id,                                       
+      66 +          original: bullet.text,                               
+      67 +          rewritten:                                           
+      68 +            item?.bullets.find((b) => b.id === bullet.id)?.rewr
+         +itten ?? "",                                                   
+      69 +          flagged: false,                                      
+      70 +        })),                                                   
+      71 +      };                                                       
+      72 +    }),                                                        
+      73 +  };                                                           
+      74 +}                                                              
+      75 +                                                               
+      76  export async function rewriteResume(
+      77    input: { experiences: Experience[]; jobDescription: string },
+      78    callClaude: CallClaude,
+      79  ): Promise<RewriteOutcome> {
+      30 -  const prompt = buildRewritePrompt(input.experiences, input.jo
+         -bDescription);                                                 
+      31 -                                                               
+      32 -  let response: z.infer<typeof claudeRewriteSchema> | undefined
+         -;                                                              
+      33 -  for (let attempt = 0; attempt < 2 && !response; attempt++) { 
+      34 -    const text = await callClaude(REWRITER_SYSTEM_PROMPT, promp
+         -t);                                                            
+      35 -    let json: unknown;                                         
+      36 -    try {                                                      
+      37 -      json = JSON.parse(text);                                 
+      38 -    } catch {                                                  
+      39 -      continue;                                                
+      40 -    }                                                          
+      41 -    const parsed = claudeRewriteSchema.safeParse(json);        
+      42 -    if (parsed.success) response = parsed.data;                
+      43 -  }                                                            
+      80 +  const response = await requestRewrite(                       
+      81 +    callClaude,                                                
+      82 +    buildRewritePrompt(input.experiences, input.jobDescription)
+         +,                                                              
+      83 +  );                                                           
+      84    if (!response) {
+      85      return {
+      86        ok: false,
+      87        error: "Claude returned an invalid rewrite response twice
+          ",
+      88      };
+      89    }
+      50 -                                                               
+      51 -  return {                                                     
+      52 -    ok: true,                                                  
+      53 -    result: {                                                  
+      54 -      items: input.experiences.map((experience) => {           
+      55 -        const item = response.items.find((i) => i.id === experi
+         -ence.id);                                                      
+      56 -        return {                                               
+      57 -          id: experience.id,                                   
+      58 -          bullets: experience.bullets.map((bullet) => ({       
+      59 -            id: bullet.id,                                     
+      60 -            original: bullet.text,                             
+      61 -            rewritten:                                         
+      62 -              item?.bullets.find((b) => b.id === bullet.id)?.re
+         -written ?? "",                                                 
+      63 -            flagged: false,                                    
+      64 -          })),                                                 
+      65 -        };                                                     
+      66 -      }),                                                      
+      67 -    },                                                         
+      68 -  };                                                           
+      90 +  return { ok: true, result: toRewriteResult(input.experiences,
+         + response) };                                                  
+      91  }
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ I pushed the earlier work, then finished cycle 1 of #6 (red, green and
+  refactor). All 59 tests pass, and lint and build are clean.
+
+  Pushed: 296c4e0 (red) and 4904966 (green) are on origin/main.
+
+  Cycle 1: invalid replies from Claude (3 commits, local only)
+
+  Commit: c809f9a
+  Step: [red]
+  What changed: 4 new tests: a reply that isn't JSON, a reply missing bullets,
+  and a reply with an empty rewrite are each retried once and the second reply
+  is used. After two bad replies, the result is { ok:  false, error }, and the
+  error message doesn't include Claude's text. All 4 failed because there was
+  no retry yet.
+  ────────────────────────────────────────
+  Commit: 7e59974
+  Step: [green]
+  What changed: A small Zod schema for Claude's reply, plus one retry. The test
+  file wasn't touched.
+  ────────────────────────────────────────
+  Commit: a9e9e9b
+  Step: refactor
+  What changed: Split into parseClaudeRewrite, requestRewrite (up to 2 calls)
+  and
+  toRewriteResult, so the next two cycles have an obvious place to add their
+  checks.
+
+  I did the whole cycle rather than stopping after red. Say if you'd rather
+  approve each step separately, as we did before.
+
+  The error message is a fixed sentence and never contains Claude's text,
+  because CLAUDE.md says Claude responses must never be logged.
+
+  Next, cycle 2: a reply with an unknown experience or bullet ID, or one that
+  leaves out a bullet. Each is retried once, then returns an error. This also
+  removes the temporary empty-string fallback from the green step. After that
+  come cycle 3 (the no-invention retry and flag) and then the Server Action.
+
+  Shall I push these three commits and start cycle 2?
+
+✻ Worked for 1m 17s · done 10:24 PM
+
+
+>>> [COMMIT] [HUMAN] Push, then rewriter cycle 3.
+
+❯ push these three commits and start cycle 2                                    
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Pushed: origin/main is now at a9e9e9b. Cycle 2 red covers replies with an
+  unknown ID or a missing bullet:
+
+
+>>> [RED] Rewriter cycle 3: an unknown experience ID, an unknown bullet ID, or a
+>>> missing bullet is retried once (CLAUDE.md's unknown-ID rule). All 4 fail
+>>> because the bad reply is accepted on the first call. Commit 8c43268.
+
+⏺ Bash(cd "/Users/samuelcoe/Documents/AI Coding Course/tailorfit" && cat >>
+      lib/pipeline/resumeRewriter.test.ts <<'EOF'…)
+  ⎿       × retries once when an experience ID is not in the input 2ms
+          × retries once when a bullet ID is not in the input 0ms
+          × retries once when a bullet is missing from the response 0ms
+     … +11 lines (ctrl+o to expand)
+  ⎿  Updated lib/pipeline/resumeRewriter.test.ts (+55 -0)
+      144      expect(!outcome.ok && outcome.error).not.toContain("not js
+           on");
+      145    });
+      146  });
+      147 +                                                              
+      148 +describe("rewriteResume — IDs that don't match the input", () 
+          +=> {                                                          
+      149 +  const valid = JSON.stringify(validResponse);                
+      150 +                                                              
+      151 +  function withBullets(itemId: string, bullets: { id: string; 
+          +rewritten: string }[]) {                                      
+      152 +    return JSON.stringify({ items: [{ id: itemId, bullets }] }
+          +);                                                            
+      153 +  }                                                           
+      154 +                                                              
+      155 +  it("retries once when an experience ID is not in the input",
+          + async () => {                                                
+      156 +    const unknownItem = withBullets("exp-ghost", validResponse
+          +.items[0].bullets);                                           
+      157 +    const callClaude = claudeReturnsInOrder(unknownItem, valid
+          +);                                                            
+      158 +                                                              
+      159 +    const outcome = await rewriteResume({ experiences, jobDesc
+          +ription }, callClaude);                                       
+      160 +                                                              
+      161 +    expect(callClaude).toHaveBeenCalledTimes(2);              
+      162 +    expect(outcome).toMatchObject({ ok: true });              
+      163 +  });                                                         
+      164 +                                                              
+      165 +  it("retries once when a bullet ID is not in the input", asyn
+          +c () => {                                                     
+      166 +    const unknownBullet = withBullets("exp-cafe", [           
+      167 +      { id: "cafe-1", rewritten: "Handled customer payments du
+          +ring weekend shifts" },                                       
+      168 +      { id: "cafe-9", rewritten: "Onboarded 3 new staff member
+          +s" },                                                         
+      169 +    ]);                                                       
+      170 +    const callClaude = claudeReturnsInOrder(unknownBullet, val
+          +id);                                                          
+      171 +                                                              
+      172 +    const outcome = await rewriteResume({ experiences, jobDesc
+          +ription }, callClaude);                                       
+      173 +                                                              
+      174 +    expect(callClaude).toHaveBeenCalledTimes(2);              
+      175 +    expect(outcome).toMatchObject({ ok: true });              
+      176 +  });                                                         
+      177 +                                                              
+      178 +  it("retries once when a bullet is missing from the response"
+          +, async () => {                                               
+      179 +    const droppedBullet = withBullets("exp-cafe", [           
+      180 +      { id: "cafe-1", rewritten: "Handled customer payments du
+          +ring weekend shifts" },                                       
+      181 +    ]);                                                       
+      182 +    const callClaude = claudeReturnsInOrder(droppedBullet, val
+          +id);                                                          
+      183 +                                                              
+     … 18 more lines (ctrl+o to expand)
+
+⏺ All 4 new tests fail on the assertion, for the right reason: replies with
+  mismatched IDs are accepted on the first call. The 6 earlier tests still pass.
+  Committing the red step:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+
+>>> [GREEN] A reply is accepted only if its IDs exactly match the input. Commit
+>>> c4850f0.
+
+⏺ Green: a reply is only accepted if its experience and bullet IDs exactly match
+  the input.
+
+⏺ Update(lib/pipeline/resumeRewriter.ts)
+  ⎿  Added 21 lines, removed 2 lines
+      36    return parsed.success ? parsed.data : undefined;
+      37  }
+      38  
+      39 -// Calls Claude up to twice, returning the first response that 
+         -parses.                                                        
+      39 +// True when the response has exactly the input's experience an
+         +d bullet IDs.                                                  
+      40 +function matchesInput(                                         
+      41 +  experiences: Experience[],                                   
+      42 +  response: ClaudeRewrite,                                     
+      43 +): boolean {                                                   
+      44 +  const expected = new Set(                                    
+      45 +    experiences.flatMap((e) => e.bullets.map((b) => `${e.id}:${
+         +b.id}`)),                                                      
+      46 +  );                                                           
+      47 +  const received = new Set(                                    
+      48 +    response.items.flatMap((i) => i.bullets.map((b) => `${i.id}
+         +:${b.id}`)),                                                   
+      49 +  );                                                           
+      50 +  return (                                                     
+      51 +    expected.size === received.size &&                         
+      52 +    [...expected].every((key) => received.has(key))            
+      53 +  );                                                           
+      54 +}                                                              
+      55 +                                                               
+      56 +// Calls Claude up to twice, returning the first response that 
+         +parses and                                                     
+      57 +// matches the input's IDs.                                    
+      58  async function requestRewrite(
+      59    callClaude: CallClaude,
+      60    prompt: string,
+      61 +  experiences: Experience[],                                   
+      62  ): Promise<ClaudeRewrite | undefined> {
+      63    for (let attempt = 0; attempt < 2; attempt++) {
+      64      const response = parseClaudeRewrite(
+      65        await callClaude(REWRITER_SYSTEM_PROMPT, prompt),
+      66      );
+      48 -    if (response) return response;                             
+      67 +    if (response && matchesInput(experiences, response)) return
+         + response;                                                     
+      68    }
+      69    return undefined;
+      70  }
+
+⏺ Update(lib/pipeline/resumeRewriter.ts)
+  ⎿  Added 1 line
+       99    const response = await requestRewrite(
+      100      callClaude,
+      101      buildRewritePrompt(input.experiences, input.jobDescription
+           ),
+      102 +    input.experiences,                                        
+      103    );
+      104    if (!response) {
+      105      return {
+
+  Ran 1 shell command (ctrl+o to expand)
+
+
+>>> [REFACTOR] One bulletKey helper and a lookup map replace three copies of the
+>>> key format. Commit 606f3c3.
+
+⏺ Refactor: the itemId:bulletId key is now built in three places, and
+  toRewriteResult still uses a nested find with the leftover ?? "" fallback.
+  I'll add one bulletKey helper and a lookup map:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Update(lib/pipeline/resumeRewriter.ts)  ⎿  Added 15 lines, removed 4 lines
+      36    return parsed.success ? parsed.data : undefined;
+      37  }
+      38  
+      39 +function bulletKey(itemId: string, bulletId: string): string { 
+      40 +  return `${itemId}:${bulletId}`;                              
+      41 +}                                                              
+      42 +                                                               
+      43 +// Maps each bullet key in the response to its rewrite.        
+      44 +function rewritesByKey(response: ClaudeRewrite): Map<string, st
+         +ring> {                                                        
+      45 +  return new Map(                                              
+      46 +    response.items.flatMap((i) =>                              
+      47 +      i.bullets.map((b) => [bulletKey(i.id, b.id), b.rewritten]
+         + as const),                                                    
+      48 +    ),                                                         
+      49 +  );                                                           
+      50 +}                                                              
+      51 +                                                               
+      52  // True when the response has exactly the input's experience an
+          d bullet IDs.
+      53  function matchesInput(
+      54    experiences: Experience[],
+      55    response: ClaudeRewrite,
+      56  ): boolean {
+      57    const expected = new Set(
+      45 -    experiences.flatMap((e) => e.bullets.map((b) => `${e.id}:${
+         -b.id}`)),                                                      
+      58 +    experiences.flatMap((e) => e.bullets.map((b) => bulletKey(e
+         +.id, b.id))),                                                  
+      59    );
+      47 -  const received = new Set(                                    
+      48 -    response.items.flatMap((i) => i.bullets.map((b) => `${i.id}
+         -:${b.id}`)),                                                   
+      49 -  );                                                           
+      60 +  const received = new Set(rewritesByKey(response).keys());    
+      61    return (
+      62      expected.size === received.size &&
+      63      [...expected].every((key) => received.has(key))
+
+⏺ Update(lib/pipeline/resumeRewriter.ts)
+  ⎿  Added 12 lines, removed 14 lines
+       81  }
+       82  
+       83  // Builds the result from the experiences, so originals and or
+           der always come
+       84 -// from the user's data rather than from Claude.              
+       84 +// from the user's data rather than from Claude. matchesInput 
+          +has already                                                   
+       85 +// checked that every bullet has a rewrite.                   
+       86  function toRewriteResult(
+       87    experiences: Experience[],
+       88    response: ClaudeRewrite,
+       89  ): RewriteResult {
+       90 +  const rewrites = rewritesByKey(response);                   
+       91    return {
+       90 -    items: experiences.map((experience) => {                  
+       91 -      const item = response.items.find((i) => i.id === experie
+          -nce.id);                                                      
+       92 -      return {                                                
+       93 -        id: experience.id,                                    
+       94 -        bullets: experience.bullets.map((bullet) => ({        
+       95 -          id: bullet.id,                                      
+       96 -          original: bullet.text,                              
+       97 -          rewritten:                                          
+       98 -            item?.bullets.find((b) => b.id === bullet.id)?.rew
+          -ritten ?? "",                                                 
+       99 -          flagged: false,                                     
+      100 -        })),                                                  
+      101 -      };                                                      
+      102 -    }),                                                       
+       92 +    items: experiences.map((experience) => ({                 
+       93 +      id: experience.id,                                      
+       94 +      bullets: experience.bullets.map((bullet) => ({          
+       95 +        id: bullet.id,                                        
+       96 +        original: bullet.text,                                
+       97 +        rewritten: rewrites.get(bulletKey(experience.id, bulle
+          +t.id)) ?? "",                                                 
+       98 +        flagged: false,                                       
+       99 +      })),                                                    
+      100 +    })),                                                      
+      101    };
+      102  }
+      103  
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ I pushed the cycle 1 commits, then finished cycle 2 of #6 (red, green and
+  refactor). All 63 tests pass, and lint and build are clean.
+
+  Pushed: origin/main is at a9e9e9b, which includes all of cycle 1.
+
+  Cycle 2: replies whose IDs don't match the input (3 commits, local only)
+
+  Commit: 8c43268
+  Step: [red]
+  What changed: 4 new tests: an unknown experience ID, an unknown bullet ID, or
+  a
+  missing bullet each gets one retry, and the retry's reply is used. Two such
+  replies in a row return an error. All 4 failed because a bad reply was
+  accepted on the first call.
+  ────────────────────────────────────────
+  Commit: c4850f0
+  Step: [green]
+  What changed: A reply is accepted only if its experience and bullet IDs
+  exactly
+  match the input. Otherwise it counts as a failure and is retried, the same as
+   a Zod failure (CLAUDE.md's unknown-ID rule). The test file wasn't changed.
+  ────────────────────────────────────────
+  Commit: 606f3c3
+  Step: refactor
+  What changed: One bulletKey helper and a lookup map now replace three copies
+  of
+  the key format and a nested search.
+
+  Small leftover: ?? "" is still there, because TypeScript can't tell that the
+  ID check already guarantees every bullet has a rewrite. A comment now explains
+  why it can't happen.
+
+  Untested edge case: an unknown experience with no bullets passes the ID check.
+  It does no harm, because the result is built from your experiences, so that
+  item is simply ignored.
+
+  Next, cycle 3: this is the core of #6.
+  1. Run checkNoInvention on each rewrite.
+  2. If any fail, retry once and tell Claude what the problem was, using the
+     messages from validate.ts.
+  3. If a bullet still fails, keep its original text and set flagged and
+     flagReason. The other rewrites stay as they are.
+
+  After that, the last step is the Server Action that connects this to /review.
+
+  Shall I push these three commits and start cycle 3?
+
+✻ Churned for 1m 14s · done 10:28 PM
+
+
+>>> [COMMIT] [HUMAN] Push, then rewriter cycle 4. Claude states how it reads
+>>> CLAUDE.md's "retry once with feedback": only the failing bullets are resent,
+>>> together with the problems found.
+
+❯ push these three commits and start cycle 3                                    
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Pushed to origin/main at 606f3c3. The retry sends only the failing bullets
+  with validate.ts's problems; any bullet that still fails keeps its original
+  text and is flagged with its reasons joined by "; ". I'm starting cycle 3 now,
+  which is red.
+
+
+>>> [RED] Rewriter cycle 4: invented content gets retried with feedback. A fixed
+>>> rewrite is used; if it still fails, the original is kept and the bullet
+>>> flagged with the reason.
+
+⏺ Bash(cd "/Users/samuelcoe/Documents/AI Coding Course/tailorfit" && cat >>
+      lib/pipeline/resumeRewriter.test.ts <<'EOF'…)
+  ⎿       × retries with feedback that names the problem 1ms
+          × sends only the failing bullets in the retry 0ms
+          × uses the fixed rewrite and keeps the rewrites that already pass
+     … +16 lines (ctrl+o to expand)
+  ⎿  Updated lib/pipeline/resumeRewriter.test.ts (+107 -0)
+      199      expect(outcome).toEqual({ ok: false, error: expect.any(Str
+           ing) });
+      200    });
+      201  });
+      202 +                                                              
+      203 +describe("rewriteResume — invented numbers or skills", () => {
+      204 +  // cafe-2's original says 3, so 5 is invented.              
+      205 +  const inventsNumber = JSON.stringify({                      
+      206 +    items: [                                                  
+      207 +      {                                                       
+      208 +        id: "exp-cafe",                                       
+      209 +        bullets: [                                            
+      210 +          { id: "cafe-1", rewritten: "Handled customer payment
+          +s during weekend shifts" },                                   
+      211 +          { id: "cafe-2", rewritten: "Onboarded 5 new staff me
+          +mbers" },                                                     
+      212 +        ],                                                    
+      213 +      },                                                      
+      214 +    ],                                                        
+      215 +  });                                                         
+      216 +                                                              
+      217 +  function retryFor(rewritten: string) {                      
+      218 +    return JSON.stringify({                                   
+      219 +      items: [{ id: "exp-cafe", bullets: [{ id: "cafe-2", rewr
+          +itten }] }],                                                  
+      220 +    });                                                       
+      221 +  }                                                           
+      222 +                                                              
+      223 +  it("retries with feedback that names the problem", async () 
+          +=> {                                                          
+      224 +    const callClaude = claudeReturnsInOrder(                  
+      225 +      inventsNumber,                                          
+      226 +      retryFor("Onboarded 3 new staff members"),              
+      227 +    );                                                        
+      228 +                                                              
+      229 +    await rewriteResume({ experiences, jobDescription }, callC
+          +laude);                                                       
+      230 +                                                              
+      231 +    expect(callClaude).toHaveBeenCalledTimes(2);              
+      232 +    const [, retryPrompt] = callClaude.mock.calls[1];         
+      233 +    expect(retryPrompt).toContain('Invented number "5"');     
+      234 +    expect(retryPrompt).toContain("cafe-2");                  
+      235 +  });                                                         
+      236 +                                                              
+      237 +  it("sends only the failing bullets in the retry", async () =
+          +> {                                                           
+      238 +    const callClaude = claudeReturnsInOrder(                  
+     … 70 more lines (ctrl+o to expand)
+
+
+>>> [RED] One test failed with a TypeError instead of an assertion. Claude
+>>> tightened that test before committing, so all 5 now fail with clear
+>>> assertion messages. Commit 441e583.
+
+⏺ Four of five tests fail on assertions, while "Sends only the failing bullets"
+  throws a TypeError because no second call exists. I'm adding an explicit
+  call-count assertion so that failure states the cause clearly.
+
+⏺ Update(lib/pipeline/resumeRewriter.test.ts)
+  ⎿  Added 1 line
+      242  
+      243      await rewriteResume({ experiences, jobDescription }, callC
+           laude);
+      244  
+      245 +    expect(callClaude).toHaveBeenCalledTimes(2);              
+      246      const [, retryPrompt] = callClaude.mock.calls[1];
+      247      expect(retryPrompt).not.toContain("Ran the register during
+            weekend shifts");
+      248    });
+
+  Ran 1 shell command (ctrl+o to expand)
+
+
+>>> [GREEN] Every rewrite goes through checkNoInvention (the validate.ts module
+>>> from log 04), and the retry prompt lists the problems. Only code changes.
+>>> Commit 860dbfa.
+
+⏺ Green: run the check, retry only the failing bullets with feedback, and flag
+  any that still fail.
+
+⏺ Update(lib/pipeline/prompts.ts)
+  ⎿  Added 17 lines
+      28  ${JSON.stringify(items, null, 2)}
+      29  </experiences>`;
+      30  }
+      31 +                                                               
+      32 +// `feedback` holds one entry per bullet that failed the no-inv
+         +ention check.                                                  
+      33 +export function buildRewriteRetryPrompt(                       
+      34 +  experiences: Experience[],                                   
+      35 +  jobDescription: string,                                      
+      36 +  feedback: { itemId: string; bulletId: string; problems: strin
+         +g[] }[],                                                       
+      37 +): string {                                                    
+      38 +  const lines = feedback.map(                                  
+      39 +    (f) => `- ${f.itemId} / ${f.bulletId}: ${f.problems.join(";
+         + ")}`,                                                         
+      40 +  );                                                           
+      41 +  return `${buildRewritePrompt(experiences, jobDescription)}   
+      42 +                                                               
+      43 +<feedback>                                                     
+      44 +Your previous rewrites of these bullets added content that is n
+         +ot in the original bullet. Rewrite them again without adding it
+         +.                                                              
+      45 +${lines.join("\n")}                                            
+      46 +</feedback>`;                                                  
+      47 +}                                                              
+
+⏺ Update(lib/pipeline/resumeRewriter.ts)
+  ⎿  Added 45 lines, removed 1 line
+      116        error: "Claude returned an invalid rewrite response twic
+           e",
+      117      };
+      118    }
+      119 -  return { ok: true, result: toRewriteResult(input.experiences
+          -, response) };                                                
+      119 +  const result = toRewriteResult(input.experiences, response);
+      120 +                                                              
+      121 +  const feedback = result.items.flatMap((item) =>             
+      122 +    item.bullets.flatMap((b) => {                             
+      123 +      const check = checkNoInvention(b.original, b.rewritten);
+      124 +      return check.ok                                         
+      125 +        ? []                                                  
+      126 +        : [{ itemId: item.id, bulletId: b.id, problems: check.
+          +problems }];                                                  
+      127 +    }),                                                       
+      128 +  );                                                          
+      129 +  if (feedback.length === 0) return { ok: true, result };     
+      130 +                                                              
+      131 +  const failingKeys = new Set(feedback.map((f) => bulletKey(f.
+          +itemId, f.bulletId)));                                        
+      132 +  const failingExperiences = input.experiences                
+      133 +    .map((e) => ({                                            
+      134 +      ...e,                                                   
+      135 +      bullets: e.bullets.filter((b) => failingKeys.has(bulletK
+          +ey(e.id, b.id))),                                             
+      136 +    }))                                                       
+      137 +    .filter((e) => e.bullets.length > 0);                     
+      138 +  const retry = await requestRewrite(                         
+      139 +    callClaude,                                               
+      140 +    buildRewriteRetryPrompt(failingExperiences, input.jobDescr
+          +iption, feedback),                                            
+      141 +    failingExperiences,                                       
+      142 +  );                                                          
+      143 +  const retryRewrites = retry ? rewritesByKey(retry) : new Map
+          +<string, string>();                                           
+      144 +                                                              
+      145 +  for (const f of feedback) {                                 
+      146 +    const key = bulletKey(f.itemId, f.bulletId);              
+      147 +    const bullet = result.items                               
+      148 +      .find((i) => i.id === f.itemId)                         
+      149 +      ?.bullets.find((b) => b.id === f.bulletId);             
+      150 +    if (!bullet) continue;                                    
+      151 +    const candidate = retryRewrites.get(key);                 
+      152 +    const check = candidate                                   
+      153 +      ? checkNoInvention(bullet.original, candidate)          
+      154 +      : { ok: false as const, problems: f.problems };         
+      155 +    if (candidate && check.ok) {                              
+      156 +      bullet.rewritten = candidate;                           
+      157 +    } else {                                                  
+      158 +      bullet.rewritten = bullet.original;                     
+      159 +      bullet.flagged = true;                                  
+      160 +      bullet.flagReason = (check.ok ? f.problems : check.probl
+          +ems).join("; ");                                              
+      161 +    }                                                         
+      162 +  }                                                           
+      163 +  return { ok: true, result };                                
+      164  }
+
+⏺ Bash(cd "/Users/samuelcoe/Documents/AI Coding Course/tailorfit" && sed -i ''
+      's|^import { buildRewritePrompt, REWRITER_SYSTEM_PROMPT } from
+      "./prompts";|import {\n…)
+  ⎿  import "server-only";
+     import { z } from "zod";
+     import type { CallClaude } from "@/lib/claude";
+     … +16 lines (ctrl+o to expand)
+  ⎿  Updated lib/pipeline/resumeRewriter.ts (+6 -1)
+       2  import { z } from "zod";
+       3  import type { CallClaude } from "@/lib/claude";
+       4  import type { Experience, RewriteResult } from "@/lib/types";
+       5 -import { buildRewritePrompt, REWRITER_SYSTEM_PROMPT } from "./p
+         -rompts";                                                       
+       5 +import {                                                       
+       6 +  buildRewritePrompt,                                          
+       7 +  buildRewriteRetryPrompt,                                     
+       8 +  REWRITER_SYSTEM_PROMPT,                                      
+       9 +} from "./prompts";                                            
+      10 +import { checkNoInvention } from "./validate";                 
+      11  
+      12  export type RewriteOutcome =
+      13    | { ok: true; result: RewriteResult }
+  ⎿  (timeout 5m)
+
+⏺ All 68 tests pass, lint and build are clean, and the test file wasn't touched.
+  Committing the green step:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+
+>>> [REFACTOR] The green step's in-place loop becomes three helpers
+>>> (findInventions, onlyFailingBullets, settleBullet), and the result is no
+>>> longer mutated. Commit 8fa1c75.
+
+⏺ rewriteResume is long, mutates its result in place, and has a confusing
+  check.ok branch that is always false. I'm splitting it into small helpers that
+  build the result without mutating it.
+
+⏺ Update(lib/pipeline/resumeRewriter.ts)
+  ⎿  Added 22 lines, removed 37 lines
+      122      };
+      123    }
+      124    const result = toRewriteResult(input.experiences, response);
+      125 -                                                              
+      126 -  const feedback = result.items.flatMap((item) =>             
+      127 -    item.bullets.flatMap((b) => {                             
+      128 -      const check = checkNoInvention(b.original, b.rewritten);
+      129 -      return check.ok                                         
+      130 -        ? []                                                  
+      131 -        : [{ itemId: item.id, bulletId: b.id, problems: check.
+          -problems }];                                                  
+      132 -    }),                                                       
+      133 -  );                                                          
+      125 +  const feedback = findInventions(result);                    
+      126    if (feedback.length === 0) return { ok: true, result };
+      127  
+      136 -  const failingKeys = new Set(feedback.map((f) => bulletKey(f.
+          -itemId, f.bulletId)));                                        
+      137 -  const failingExperiences = input.experiences                
+      138 -    .map((e) => ({                                            
+      139 -      ...e,                                                   
+      140 -      bullets: e.bullets.filter((b) => failingKeys.has(bulletK
+          -ey(e.id, b.id))),                                             
+      141 -    }))                                                       
+      142 -    .filter((e) => e.bullets.length > 0);                     
+      128 +  const failing = onlyFailingBullets(input.experiences, feedba
+          +ck);                                                          
+      129    const retry = await requestRewrite(
+      130      callClaude,
+      145 -    buildRewriteRetryPrompt(failingExperiences, input.jobDescr
+          -iption, feedback),                                            
+      146 -    failingExperiences,                                       
+      131 +    buildRewriteRetryPrompt(failing, input.jobDescription, fee
+          +dback),                                                       
+      132 +    failing,                                                  
+      133    );
+      134    const retryRewrites = retry ? rewritesByKey(retry) : new Map
+           <string, string>();
+      135 +  const problemsByKey = new Map(                              
+      136 +    feedback.map((f) => [bulletKey(f.itemId, f.bulletId), f.pr
+          +oblems]),                                                     
+      137 +  );                                                          
+      138  
+      150 -  for (const f of feedback) {                                 
+      151 -    const key = bulletKey(f.itemId, f.bulletId);              
+      152 -    const bullet = result.items                               
+      153 -      .find((i) => i.id === f.itemId)                         
+      154 -      ?.bullets.find((b) => b.id === f.bulletId);             
+      155 -    if (!bullet) continue;                                    
+      156 -    const candidate = retryRewrites.get(key);                 
+      157 -    const check = candidate                                   
+      158 -      ? checkNoInvention(bullet.original, candidate)          
+      159 -      : { ok: false as const, problems: f.problems };         
+      160 -    if (candidate && check.ok) {                              
+      161 -      bullet.rewritten = candidate;                           
+      162 -    } else {                                                  
+      163 -      bullet.rewritten = bullet.original;                     
+      164 -      bullet.flagged = true;                                  
+      165 -      bullet.flagReason = (check.ok ? f.problems : check.probl
+          -ems).join("; ");                                              
+      166 -    }                                                         
+      167 -  }                                                           
+      168 -  return { ok: true, result };                                
+      139 +  return {                                                    
+      140 +    ok: true,                                                 
+      141 +    result: {                                                 
+      142 +      items: result.items.map((item) => ({                    
+      143 +        ...item,                                              
+      144 +        bullets: item.bullets.map((bullet) => {               
+      145 +          const key = bulletKey(item.id, bullet.id);          
+      146 +          const problems = problemsByKey.get(key);            
+      147 +          return problems                                     
+      148 +            ? settleBullet(bullet, retryRewrites.get(key), pro
+          +blems)                                                        
+      149 +            : bullet;                                         
+      150 +        }),                                                   
+      151 +      })),                                                    
+      152 +    },                                                        
+      153 +  };                                                          
+      154  }
+
+⏺ Update(lib/pipeline/resumeRewriter.ts)
+  ⎿  Added 50 lines
+      106    };
+      107  }
+      108  
+      109 +type RewriteBullet = RewriteResult["items"][number]["bullets"]
+          +[number];                                                     
+      110 +type Feedback = { itemId: string; bulletId: string; problems: 
+          +string[] };                                                   
+      111 +                                                              
+      112 +// One entry per bullet whose rewrite fails the no-invention c
+          +heck.                                                         
+      113 +function findInventions(result: RewriteResult): Feedback[] {  
+      114 +  return result.items.flatMap((item) =>                       
+      115 +    item.bullets.flatMap((b) => {                             
+      116 +      const check = checkNoInvention(b.original, b.rewritten);
+      117 +      return check.ok                                         
+      118 +        ? []                                                  
+      119 +        : [{ itemId: item.id, bulletId: b.id, problems: check.
+          +problems }];                                                  
+      120 +    }),                                                       
+      121 +  );                                                          
+      122 +}                                                             
+      123 +                                                              
+      124 +// The experiences cut down to just the bullets named in the f
+          +eedback.                                                      
+      125 +function onlyFailingBullets(                                  
+      126 +  experiences: Experience[],                                  
+      127 +  feedback: Feedback[],                                       
+      128 +): Experience[] {                                             
+      129 +  const failing = new Set(feedback.map((f) => bulletKey(f.item
+          +Id, f.bulletId)));                                            
+      130 +  return experiences                                          
+      131 +    .map((e) => ({                                            
+      132 +      ...e,                                                   
+      133 +      bullets: e.bullets.filter((b) => failing.has(bulletKey(e
+          +.id, b.id))),                                                 
+      134 +    }))                                                       
+      135 +    .filter((e) => e.bullets.length > 0);                     
+      136 +}                                                             
+      137 +                                                              
+      138 +// For a bullet that failed the check: use the retry's rewrite
+          + if it passes,                                                
+      139 +// otherwise keep the original and flag it with the latest pro
+          +blems.                                                        
+      140 +function settleBullet(                                        
+      141 +  bullet: RewriteBullet,                                      
+      142 +  retryRewrite: string | undefined,                           
+      143 +  problems: string[],                                         
+      144 +): RewriteBullet {                                            
+      145 +  let latest = problems;                                      
+      146 +  if (retryRewrite !== undefined) {                           
+      147 +    const check = checkNoInvention(bullet.original, retryRewri
+          +te);                                                          
+      148 +    if (check.ok) return { ...bullet, rewritten: retryRewrite 
+          +};                                                            
+      149 +    latest = check.problems;                                  
+      150 +  }                                                           
+      151 +  return {                                                    
+      152 +    ...bullet,                                                
+      153 +    rewritten: bullet.original,                               
+      154 +    flagged: true,                                            
+      155 +    flagReason: latest.join("; "),                            
+      156 +  };                                                          
+      157 +}                                                             
+      158 +                                                              
+      159  export async function rewriteResume(
+      160    input: { experiences: Experience[]; jobDescription: string }
+           ,
+      161    callClaude: CallClaude,
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ I pushed cycle 2, and cycle 3 (the no-invention retry) is now committed as
+  red, green and refactor. All 68 tests pass, and lint and build are clean.
+
+  Pushed: origin/main is at 606f3c3, which includes all of cycle 2.
+
+  Cycle 3: retry invented content, then keep the original and flag it (3 
+  commits, local only)
+
+  Commit: 441e583
+  Step: [red]
+  What changed: 5 new tests: the retry tells Claude what the problem was (e.g.
+  Invented number "5"), and only the failing bullets are sent. A fixed rewrite
+  is used and rewrites that already passed are kept. If the retry still invents
+   something, or comes back unusable, the bullet keeps its original text and is
+   flagged with the reason. All 5 failed on their assertions.
+  ────────────────────────────────────────
+  Commit: 860dbfa
+  Step: [green]
+  What changed: Each rewrite goes through checkNoInvention. A new
+  buildRewriteRetryPrompt in prompts.ts sends the failing bullets with a
+  <feedback> list of problems. Only the code changed, not the tests.
+  ────────────────────────────────────────
+  Commit: 8fa1c75
+  Step: refactor
+  What changed: The long loop that edited the result in place became three
+  helpers: findInventions, onlyFailingBullets and settleBullet. The final
+  result is now built as a new object instead of being changed in place.
+
+  How I interpreted CLAUDE.md:
+  - Only the failing bullets are retried.
+  - The flagReason shows the problems from the latest attempt. If the retry
+    reply was unusable, it falls back to the first attempt's problems.
+  - A retry reply that is unusable (bad JSON or wrong IDs) gets its own single
+    retry. So in the worst case, one rewrite run makes 4 calls to Claude.
+
+  #6 is now complete except for the Server Action. It needs a "use server"
+  function that passes the real callClaude to rewriteResume, and /review needs
+  to call it instead of using the sample data. That also finishes #7. The action
+  lives in app/, and it's a thin wrapper with no logic of its own.
+
+  Shall I push these three commits and start on the Server Action?
+
+✻ Baked for 1m 48s · done 10:32 PM
+
+
+>>> [CONTEXT] A status check against the assignment rubric.
+
+❯ What should I do for homework 4?                                              
+
+⏺ Your code work for the assignment is done. What's left is mostly writing and
+  saving evidence.
+
+  Already done
+
+  ┌─────────────────┬───────────────────────────────────────────────────────┐
+  │      Part       │                       Evidence                        │
+  ├─────────────────┼───────────────────────────────────────────────────────┤
+  │                 │ CLAUDE.md with @AGENTS.md and @docs/PRD.md imports,   │
+  │ 1. Setup (25%)  │ .claude/settings.json permissions, the /init          │
+  │                 │ CLAUDE.md refined through an interview (log 01),      │
+  │                 │ /clear (log 01), /compact (this session)              │
+  ├─────────────────┼───────────────────────────────────────────────────────┤
+  │ 2. Explore →    │                                                       │
+  │ Plan →          │ #7: plan mode, the plan committed (232237b), then the │
+  │ Implement →     │  implementation commits                               │
+  │ Commit (30%)    │                                                       │
+  ├─────────────────┼───────────────────────────────────────────────────────┤
+  │                 │ 11 red → green cycles by you, across the no-invention │
+  │ 3. TDD (30%)    │  check, the review reducer, the type swap and the     │
+  │                 │ rewriter, plus Yanni's cycles on schemas, callClaude  │
+  │                 │ and storage                                           │
+  ├─────────────────┼───────────────────────────────────────────────────────┤
+  │ 4. Session log  │ Log 04, annotated                                     │
+  └─────────────────┴───────────────────────────────────────────────────────┘
+
+  Still to do
+
+  1. Push the 3 cycle 3 commits (441e583, 860dbfa, 8fa1c75). They're only
+     committed locally right now.
+  2. Export this session as log 05. Type /export 
+     docs/session-logs/05-rewriter-tdd.txt. It shows:
+     - work continuing after /compact, which is your evidence for /compact
+     - the #7 type swap
+     - three more TDD cycles for #6
+
+     I can annotate it the same way as log 04.
+  3. Use claude --continue once. It's the only context command you haven't shown
+     yet. Start your next session with it and export or screenshot it.
+  4. Write the reflection in docs/reflection.md. It should be 1–2 pages, in your
+     own words, built from docs/reflection-outline.md. New things from this
+     session worth mentioning:
+     - Yanni's merge of #1 unblocked your work. You found what changed by
+       pulling, then switched to her types with a TDD cycle.
+     - The log-numbering clash and the broken lockfile, as real pair-work
+       friction.
+     - /compact let one long session continue across several tasks.
+  5. Ask your instructor whether it's one reflection per pair or one each.
+  6. Commit and push the reflection, log 05 and any --continue evidence: git 
+     pull --rebase, then git push.
+
+  Optional, not graded: the Server Action that connects #6 to /review, and the
+  lockfile fix. The PRD wants every story working end to end, but the assignment
+  doesn't depend on it.
+
+  Shall I push the 3 commits now, so you can then run /export and I'll annotate
+  log 05?
+
+✻ Sautéed for 10s · done 10:34 PM
+
+
+>>> [COMMIT] Push 8fa1c75. All of #6 except the Server Action is on main.
+
+❯ push the 3 commits now, so I can then run /export and annotate log 05?        
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ I pushed the three cycle 3 commits, so origin/main is now at 8fa1c75. All 68
+  tests passed after git pull --rebase, and there's nothing left uncommitted.
+
+  Next, export this session:
+
+  /export docs/session-logs/05-rewriter-tdd.txt
+
+  Once it's saved, tell me and I'll annotate it the same way as log 04. I'll add
+  a header with a commit timeline and >>> notes at the key moments:
+  - /compact and continuing afterwards
+  - the pull that brought in Yanni's changes
+  - the type swap
+  - the three rewriter TDD cycles
+
+  Then I'll commit it.
+
+✻ Cooked for 8s · done 10:35 PM
+
+
+>>> [HUMAN] My mistake: I typed /export while still in bash mode, so the shell
+>>> tried to run it. Claude explained the difference, and the export that
+>>> created this file came next.
+
+! /export docs/session-logs/05-rewriter-tdd.txt                                   ⎿  (eval):1: no such file or directory: /export
+
+
+⏺ That ran as a shell command, because the prompt was in bash mode (the !
+  prefix). /export is a Claude Code command, not a shell command.
+
+  Exit bash mode first: press Backspace on the empty prompt, or Esc, until the !
+  is gone. Then type it as a normal message:
+
+  /export docs/session-logs/05-rewriter-tdd.txt
+
+  When it says "Conversation exported to …", let me know and I'll annotate it.
+
+✻ Cooked for 3s · done 10:36 PM
