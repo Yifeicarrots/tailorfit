@@ -9,7 +9,9 @@
     ],
     "ask": [
       "Bash(git commit *)",
-      "Bash(git push *)"
+      "Bash(git push *)",
+      "Bash(gh issue *)",
+      "Bash(gh label *)"
     ],
     "deny": [
       "Bash(npm run eval*)",
