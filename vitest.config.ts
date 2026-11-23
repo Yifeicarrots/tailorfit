@@ -7,5 +7,6 @@ export default defineConfig({
   },
   test: {
     exclude: [...configDefaults.exclude, "evals/**"],
+    setupFiles: ["./vitest.setup.ts"],
   },
 });
