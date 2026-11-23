@@ -50,4 +50,8 @@ describe("experience library storage", () => {
     saveLibrary(store, library);
     expect(loadLibrary(store)).toEqual(library);
   });
+
+  it("returns an empty library when nothing is stored", () => {
+    expect(loadLibrary(fakeStore())).toEqual([]);
+  });
 });
