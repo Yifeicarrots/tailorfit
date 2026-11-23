@@ -65,3 +65,21 @@ describe("selectExperiences — prompt", () => {
     expect(system).toContain('{"selected":[]}');
   });
 });
+
+describe("selectExperiences — valid response", () => {
+  it("parses the picks with their reasons, in Claude's order", async () => {
+    const ranked = {
+      selected: [
+        { id: "proj-garden", reason: "Built a sign-up flow for guests" },
+        { id: "exp-cafe", reason: "Handled payments and trained staff" },
+      ],
+    };
+
+    const outcome = await selectExperiences(
+      { library, jobDescription },
+      claudeReturns(ranked),
+    );
+
+    expect(outcome).toEqual({ ok: true, result: ranked });
+  });
+});
