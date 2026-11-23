@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
+  clearUserName,
   loadLibrary,
+  loadUserName,
   saveLibrary,
+  saveUserName,
   type KeyValueStore,
 } from "@/lib/storage/storage";
 import type { ExperienceLibrary } from "@/lib/types";
@@ -66,5 +69,32 @@ describe("experience library storage", () => {
     const noBullets = [{ ...library[0], bullets: [] }];
     store.data.set("tailorfit:library", JSON.stringify(noBullets));
     expect(loadLibrary(store)).toEqual([]);
+  });
+});
+
+describe("demo user name storage", () => {
+  it("returns null when no name is stored", () => {
+    expect(loadUserName(fakeStore())).toBeNull();
+  });
+
+  it("returns the saved name", () => {
+    const store = fakeStore();
+    saveUserName(store, "Avery Quinn");
+    expect(loadUserName(store)).toBe("Avery Quinn");
+  });
+
+  it("returns null after the name is cleared", () => {
+    const store = fakeStore();
+    saveUserName(store, "Avery Quinn");
+    clearUserName(store);
+    expect(loadUserName(store)).toBeNull();
+  });
+
+  it("returns null instead of throwing on corrupted or invalid data", () => {
+    const store = fakeStore();
+    store.data.set("tailorfit:userName", "{not valid json");
+    expect(loadUserName(store)).toBeNull();
+    store.data.set("tailorfit:userName", JSON.stringify(42));
+    expect(loadUserName(store)).toBeNull();
   });
 });
