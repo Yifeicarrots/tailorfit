@@ -6,6 +6,7 @@ import {
   type SelectionResult,
 } from "@/lib/types";
 import { buildSelectionPrompt, SELECTOR_SYSTEM_PROMPT } from "./prompts";
+import { checkSelectionIds } from "./validate";
 
 export type SelectionOutcome =
   | { ok: true; result: SelectionResult }
@@ -25,7 +26,9 @@ export async function selectExperiences(
       continue;
     }
     const parsed = selectionResultSchema.safeParse(json);
-    if (parsed.success) return { ok: true, result: parsed.data };
+    if (parsed.success && checkSelectionIds(parsed.data, input.library).ok) {
+      return { ok: true, result: parsed.data };
+    }
   }
   return { ok: false, error: "Claude returned an invalid selection response twice" };
 }
