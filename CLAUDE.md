@@ -5,12 +5,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 @AGENTS.md
 @docs/PRD.md
 
-## Status
-
-`app/page.tsx` and `app/layout.tsx` are still template code. Built so far: the shared Zod schemas in `lib/types.ts`, the model constant `CLAUDE_MODEL` in `lib/config.ts`, and `callClaude` in `lib/claude.ts` (the only SDK user; `createCallClaude(client)` is the testable factory); the no-invention check (`lib/pipeline/validate.ts`); and the bullet comparison screen (`app/review/`, with its reducer in `lib/review/`), which still runs on fixture data and a provisional type in `lib/review/provisionalRewrite.ts` until it switches to `RewriteResult` from `lib/types.ts`. `vitest.config.ts` excludes `evals/` and loads `vitest.setup.ts`, which mocks `server-only` once for all tests. `lib/storage/`, demo sign-in, and the `eval` script don't exist yet.
-
-**Local only.** The app runs on `localhost` and must not be deployed publicly: there is no real authentication, so a public deployment would let anyone spend the Anthropic API key.
-
 ## Commands
 
 - `npm run dev` — dev server at http://localhost:3000 (Turbopack)
@@ -25,8 +19,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **`cacheComponents: true`**: fetching is dynamic by default, caching is opt-in via `"use cache"`, uncached dynamic data must sit under `<Suspense>`. **`partialPrefetching: true`** is also on.
 - **Tailwind CSS v4** via a Turbopack loader rule (no `postcss.config`/`tailwind.config`); tokens in `app/globals.css` under `@theme inline`. Utility classes only — no CSS modules or component library.
 - **Storage**: the browser's `localStorage`, behind a single module in `lib/storage/`. Data lives on one device and browser only. Sign-in is a demo with no real authentication.
-- **Claude**: `@anthropic-ai/sdk`, model `claude-sonnet-5-5` defined in a single config constant — never hardcode it elsewhere.
+- **Claude**: `@anthropic-ai/sdk`, model `claude-sonnet-5-5` defined once as `CLAUDE_MODEL` in `lib/config.ts` — never hardcode it elsewhere.
 - **Zod** validates every Claude JSON response.
+- **Local only.** The app runs on `localhost` and must not be deployed publicly: there is no real authentication, so a public deployment would let anyone spend the Anthropic API key.
 - Pages use generated route types (e.g. `LayoutProps<"/">`) from `.next/types`. Path alias `@/*` → repo root.
 
 ## Architecture
@@ -34,6 +29,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Server Actions** run the pipeline. Selection and rewriting are **two separate actions** so the user can adjust the selection in between.
 - **Storage** goes through `lib/storage/` only. Nothing else touches `localStorage` directly. Server Actions can't read browser storage, so client components load data from `lib/storage/` and pass it to the actions as arguments.
 - **Pipeline code** lives in framework-free modules under `lib/pipeline/` (`experienceSelector.ts`, `resumeRewriter.ts`, `validate.ts`, `prompts.ts`). Prompts stay in `prompts.ts`, not inline.
+- **Claude access**: `lib/claude.ts` is the only module that uses the SDK. It exports `callClaude(system, prompt)` and the testable factory `createCallClaude(client)`.
 - **Dependency injection**: stages receive a narrow `callClaude(system, prompt)` function, never the SDK client. Code that persists data receives the storage functions the same way, never `localStorage` itself.
 - **Validation failures**:
   - Zod/JSON failure → retry the whole call once, then return an error.
@@ -49,12 +45,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Never log resume content, job descriptions, or Claude responses.
 - Required env vars are listed in a committed `.env.example`; never commit `.env*` or put keys in code.
 - Ask before adding any dependency.
+- Track progress in GitHub issues, not in CLAUDE.md.
 
 ## Testing
 
 - **Strict TDD** for everything in `lib/` (including `lib/storage/`). Not required for UI components.
 - **Red step**: write only the failing test. **Green step**: minimum implementation; never modify the test. Then refactor if needed.
 - Unit tests are colocated (`foo.test.ts` beside `foo.ts`) and mock both `callClaude` and storage, injected the same way.
+- `vitest.setup.ts` mocks `server-only` once for all tests; don't mock it in individual test files.
 - Evals live in `evals/` and are excluded from the Vitest config. Fixtures are JSON in `evals/fixtures/`; each run's scores are saved to `evals/results/` with the date. Evals run manually, never in CI.
 - Claude may draft fictional resumes and job descriptions for fixtures, but **never writes or edits the "must include" labels** — the two team members label them independently.
 - Never weaken a validation check, loosen a Zod schema, or edit a fixture to make a test or eval pass.
