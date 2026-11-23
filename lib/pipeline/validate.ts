@@ -66,7 +66,9 @@ export function checkSelectionIds(
   selection: SelectionResult,
   library: Experience[],
 ): SelectionIdsResult {
-  void selection;
-  void library;
-  return { ok: true };
+  const libraryIds = new Set(library.map((e) => e.id));
+  const problems = selection.selected
+    .filter((pick) => !libraryIds.has(pick.id))
+    .map((pick) => `Selected ID "${pick.id}" is not in the library`);
+  return problems.length === 0 ? { ok: true } : { ok: false, problems };
 }
