@@ -183,4 +183,8 @@ describe("checkSelectionIds", () => {
     expect(check.ok).toBe(false);
     expect(!check.ok && check.problems.join(" ")).toContain("exp-cafe");
   });
+
+  it("accepts an empty selection", () => {
+    expect(checkSelectionIds({ selected: [] }, library)).toEqual({ ok: true });
+  });
 });
