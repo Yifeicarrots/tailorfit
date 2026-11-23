@@ -44,3 +44,80 @@ describe("checkNoInvention — numbers", () => {
     ]);
   });
 });
+
+describe("checkNoInvention — skills and employers", () => {
+  it("does not flag a new capitalized word at the start of the bullet", () => {
+    const result = checkNoInvention(
+      "made posters for club events",
+      "Designed posters for club events",
+    );
+
+    expect(result).toEqual({ ok: true });
+  });
+
+  it("rejects a capitalized technology absent from the original", () => {
+    const result = checkNoInvention(
+      "Built a website for a local bakery",
+      "Built a React website for a local bakery",
+    );
+
+    expect(!result.ok && result.problems).toEqual([
+      expect.stringContaining("React"),
+    ]);
+  });
+
+  it("rejects an acronym absent from the original, even as the first word", () => {
+    const result = checkNoInvention(
+      "Analyzed survey results",
+      "SQL-driven analysis of survey results",
+    );
+
+    expect(!result.ok && result.problems).toEqual([
+      expect.stringContaining("SQL"),
+    ]);
+  });
+
+  it("rejects technology names written with symbols", () => {
+    const result = checkNoInvention(
+      "Wrote backend services",
+      "Wrote Node.js backend services in C++",
+    );
+
+    expect(!result.ok && result.problems).toEqual([
+      expect.stringContaining("Node.js"),
+      expect.stringContaining("C++"),
+    ]);
+  });
+
+  it("rejects an employer absent from the original", () => {
+    const result = checkNoInvention(
+      "Interned on the data team",
+      "Interned on the data team at Northwind",
+    );
+
+    expect(!result.ok && result.problems).toEqual([
+      expect.stringContaining("Northwind"),
+    ]);
+  });
+
+  it("accepts terms from the original regardless of case or punctuation", () => {
+    const result = checkNoInvention(
+      "Built a react app with firebase.",
+      "Shipped a React app backed by Firebase",
+    );
+
+    expect(result).toEqual({ ok: true });
+  });
+
+  it("reports invented numbers and skills together", () => {
+    const result = checkNoInvention(
+      "Improved the search page",
+      "Improved search page speed by 30% using Redis",
+    );
+
+    expect(!result.ok && result.problems).toEqual([
+      expect.stringContaining("30%"),
+      expect.stringContaining("Redis"),
+    ]);
+  });
+});
