@@ -106,6 +106,56 @@ function toRewriteResult(
   };
 }
 
+type RewriteBullet = RewriteResult["items"][number]["bullets"][number];
+type Feedback = { itemId: string; bulletId: string; problems: string[] };
+
+// One entry per bullet whose rewrite fails the no-invention check.
+function findInventions(result: RewriteResult): Feedback[] {
+  return result.items.flatMap((item) =>
+    item.bullets.flatMap((b) => {
+      const check = checkNoInvention(b.original, b.rewritten);
+      return check.ok
+        ? []
+        : [{ itemId: item.id, bulletId: b.id, problems: check.problems }];
+    }),
+  );
+}
+
+// The experiences cut down to just the bullets named in the feedback.
+function onlyFailingBullets(
+  experiences: Experience[],
+  feedback: Feedback[],
+): Experience[] {
+  const failing = new Set(feedback.map((f) => bulletKey(f.itemId, f.bulletId)));
+  return experiences
+    .map((e) => ({
+      ...e,
+      bullets: e.bullets.filter((b) => failing.has(bulletKey(e.id, b.id))),
+    }))
+    .filter((e) => e.bullets.length > 0);
+}
+
+// For a bullet that failed the check: use the retry's rewrite if it passes,
+// otherwise keep the original and flag it with the latest problems.
+function settleBullet(
+  bullet: RewriteBullet,
+  retryRewrite: string | undefined,
+  problems: string[],
+): RewriteBullet {
+  let latest = problems;
+  if (retryRewrite !== undefined) {
+    const check = checkNoInvention(bullet.original, retryRewrite);
+    if (check.ok) return { ...bullet, rewritten: retryRewrite };
+    latest = check.problems;
+  }
+  return {
+    ...bullet,
+    rewritten: bullet.original,
+    flagged: true,
+    flagReason: latest.join("; "),
+  };
+}
+
 export async function rewriteResume(
   input: { experiences: Experience[]; jobDescription: string },
   callClaude: CallClaude,
@@ -122,48 +172,33 @@ export async function rewriteResume(
     };
   }
   const result = toRewriteResult(input.experiences, response);
-
-  const feedback = result.items.flatMap((item) =>
-    item.bullets.flatMap((b) => {
-      const check = checkNoInvention(b.original, b.rewritten);
-      return check.ok
-        ? []
-        : [{ itemId: item.id, bulletId: b.id, problems: check.problems }];
-    }),
-  );
+  const feedback = findInventions(result);
   if (feedback.length === 0) return { ok: true, result };
 
-  const failingKeys = new Set(feedback.map((f) => bulletKey(f.itemId, f.bulletId)));
-  const failingExperiences = input.experiences
-    .map((e) => ({
-      ...e,
-      bullets: e.bullets.filter((b) => failingKeys.has(bulletKey(e.id, b.id))),
-    }))
-    .filter((e) => e.bullets.length > 0);
+  const failing = onlyFailingBullets(input.experiences, feedback);
   const retry = await requestRewrite(
     callClaude,
-    buildRewriteRetryPrompt(failingExperiences, input.jobDescription, feedback),
-    failingExperiences,
+    buildRewriteRetryPrompt(failing, input.jobDescription, feedback),
+    failing,
   );
   const retryRewrites = retry ? rewritesByKey(retry) : new Map<string, string>();
+  const problemsByKey = new Map(
+    feedback.map((f) => [bulletKey(f.itemId, f.bulletId), f.problems]),
+  );
 
-  for (const f of feedback) {
-    const key = bulletKey(f.itemId, f.bulletId);
-    const bullet = result.items
-      .find((i) => i.id === f.itemId)
-      ?.bullets.find((b) => b.id === f.bulletId);
-    if (!bullet) continue;
-    const candidate = retryRewrites.get(key);
-    const check = candidate
-      ? checkNoInvention(bullet.original, candidate)
-      : { ok: false as const, problems: f.problems };
-    if (candidate && check.ok) {
-      bullet.rewritten = candidate;
-    } else {
-      bullet.rewritten = bullet.original;
-      bullet.flagged = true;
-      bullet.flagReason = (check.ok ? f.problems : check.problems).join("; ");
-    }
-  }
-  return { ok: true, result };
+  return {
+    ok: true,
+    result: {
+      items: result.items.map((item) => ({
+        ...item,
+        bullets: item.bullets.map((bullet) => {
+          const key = bulletKey(item.id, bullet.id);
+          const problems = problemsByKey.get(key);
+          return problems
+            ? settleBullet(bullet, retryRewrites.get(key), problems)
+            : bullet;
+        }),
+      })),
+    },
+  };
 }
