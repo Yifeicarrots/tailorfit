@@ -133,3 +133,51 @@ describe("experienceFromForm with valid input", () => {
     expect(result).toEqual({ ok: true, experience: { ...experience, endDate: null } });
   });
 });
+
+describe("experienceFromForm with invalid input", () => {
+  const valid = formFromExperience(experience);
+
+  function errorsFor(overrides: Partial<typeof valid>) {
+    const result = experienceFromForm({ ...valid, ...overrides });
+    expect(result.ok).toBe(false);
+    return result.ok ? {} : result.errors;
+  }
+
+  it("asks for a title when it's blank", () => {
+    expect(errorsFor({ title: "   " })).toEqual({ title: "Add a title." });
+  });
+
+  it("asks for a start month when it's missing", () => {
+    expect(errorsFor({ startDate: "" })).toEqual({
+      startDate: "Pick a start month.",
+    });
+  });
+
+  it("asks for an end month or Current when the end is missing", () => {
+    expect(errorsFor({ endDate: "", current: false })).toEqual({
+      endDate: "Pick an end month, or tick Current.",
+    });
+  });
+
+  it("rejects an end month before the start month", () => {
+    expect(errorsFor({ startDate: "2025-06", endDate: "2025-01" })).toEqual({
+      endDate: "End month can't be before the start month.",
+    });
+  });
+
+  it("asks for at least one bullet when every row is blank", () => {
+    expect(errorsFor({ bullets: [{ id: "b-1", text: "  " }] })).toEqual({
+      bullets: "Add at least one bullet point.",
+    });
+  });
+
+  it("reports every problem at once", () => {
+    expect(
+      errorsFor({ title: "", startDate: "", bullets: [{ id: "b-1", text: "" }] }),
+    ).toEqual({
+      title: "Add a title.",
+      startDate: "Pick a start month.",
+      bullets: "Add at least one bullet point.",
+    });
+  });
+});
