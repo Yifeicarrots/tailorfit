@@ -199,3 +199,111 @@ describe("rewriteResume — IDs that don't match the input", () => {
     expect(outcome).toEqual({ ok: false, error: expect.any(String) });
   });
 });
+
+describe("rewriteResume — invented numbers or skills", () => {
+  // cafe-2's original says 3, so 5 is invented.
+  const inventsNumber = JSON.stringify({
+    items: [
+      {
+        id: "exp-cafe",
+        bullets: [
+          { id: "cafe-1", rewritten: "Handled customer payments during weekend shifts" },
+          { id: "cafe-2", rewritten: "Onboarded 5 new staff members" },
+        ],
+      },
+    ],
+  });
+
+  function retryFor(rewritten: string) {
+    return JSON.stringify({
+      items: [{ id: "exp-cafe", bullets: [{ id: "cafe-2", rewritten }] }],
+    });
+  }
+
+  it("retries with feedback that names the problem", async () => {
+    const callClaude = claudeReturnsInOrder(
+      inventsNumber,
+      retryFor("Onboarded 3 new staff members"),
+    );
+
+    await rewriteResume({ experiences, jobDescription }, callClaude);
+
+    expect(callClaude).toHaveBeenCalledTimes(2);
+    const [, retryPrompt] = callClaude.mock.calls[1];
+    expect(retryPrompt).toContain('Invented number "5"');
+    expect(retryPrompt).toContain("cafe-2");
+  });
+
+  it("sends only the failing bullets in the retry", async () => {
+    const callClaude = claudeReturnsInOrder(
+      inventsNumber,
+      retryFor("Onboarded 3 new staff members"),
+    );
+
+    await rewriteResume({ experiences, jobDescription }, callClaude);
+
+    expect(callClaude).toHaveBeenCalledTimes(2);
+    const [, retryPrompt] = callClaude.mock.calls[1];
+    expect(retryPrompt).not.toContain("Ran the register during weekend shifts");
+  });
+
+  it("uses the fixed rewrite and keeps the rewrites that already passed", async () => {
+    const outcome = await rewriteResume(
+      { experiences, jobDescription },
+      claudeReturnsInOrder(inventsNumber, retryFor("Onboarded 3 new staff members")),
+    );
+
+    expect(outcome.ok && outcome.result.items[0].bullets).toEqual([
+      {
+        id: "cafe-1",
+        original: "Ran the register during weekend shifts",
+        rewritten: "Handled customer payments during weekend shifts",
+        flagged: false,
+      },
+      {
+        id: "cafe-2",
+        original: "Trained 3 new baristas",
+        rewritten: "Onboarded 3 new staff members",
+        flagged: false,
+      },
+    ]);
+  });
+
+  it("keeps the original and flags the bullet when the retry still invents", async () => {
+    const outcome = await rewriteResume(
+      { experiences, jobDescription },
+      claudeReturnsInOrder(inventsNumber, retryFor("Onboarded 3 new staff using Excel")),
+    );
+
+    expect(outcome.ok && outcome.result.items[0].bullets).toEqual([
+      {
+        id: "cafe-1",
+        original: "Ran the register during weekend shifts",
+        rewritten: "Handled customer payments during weekend shifts",
+        flagged: false,
+      },
+      {
+        id: "cafe-2",
+        original: "Trained 3 new baristas",
+        rewritten: "Trained 3 new baristas",
+        flagged: true,
+        flagReason: expect.stringContaining('"Excel"'),
+      },
+    ]);
+  });
+
+  it("keeps the original and flags the bullet when the retry response is invalid", async () => {
+    const outcome = await rewriteResume(
+      { experiences, jobDescription },
+      claudeReturnsInOrder(inventsNumber, "not json", "still not json"),
+    );
+
+    expect(outcome.ok && outcome.result.items[0].bullets[1]).toEqual({
+      id: "cafe-2",
+      original: "Trained 3 new baristas",
+      rewritten: "Trained 3 new baristas",
+      flagged: true,
+      flagReason: expect.stringContaining('"5"'),
+    });
+  });
+});
