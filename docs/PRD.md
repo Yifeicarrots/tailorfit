@@ -33,8 +33,8 @@ people send one generic resume everywhere and get fewer callbacks.
    side and accept or edit it, so the final version still sounds like me.
 7. As a job seeker, I want assurance that rewrites never invent skills or numbers
    I didn't provide, so I can stand behind every line in an interview.
-8. As a job seeker, I want to sign in with Google, so my library is available
-   on any device.
+8. As a job seeker, I want a simple demo sign-in (no real authentication), so I
+   can enter the app and get back to my saved library.
 
 ## Core Pipeline
 1. ExperienceSelector (Claude call #1): takes the experience library and job
@@ -49,10 +49,11 @@ people send one generic resume everywhere and get fewer callbacks.
 - The Anthropic API key is used only in server-side code, never in the browser.
 - Rewrites must not add skills, employers, or numbers absent from the original.
 - Sample and test data use fictional people, never real resumes.
-- Users can only access their own data, enforced by Supabase row-level
-  security (RLS).
+- Data is stored in the browser's localStorage, so a library lives on one
+  device and browser only.
 
 ## Out of Scope
+- User accounts and authentication
 - Exporting to PDF or Word
 - Job search or application tracking
 
