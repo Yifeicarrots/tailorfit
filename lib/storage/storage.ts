@@ -1,4 +1,4 @@
-import type { ExperienceLibrary } from "@/lib/types";
+import { experienceLibrarySchema, type ExperienceLibrary } from "@/lib/types";
 
 export type KeyValueStore = Pick<Storage, "getItem" | "setItem" | "removeItem">;
 
@@ -11,9 +11,12 @@ export function saveLibrary(store: KeyValueStore, library: ExperienceLibrary): v
 export function loadLibrary(store: KeyValueStore): ExperienceLibrary {
   const raw = store.getItem(LIBRARY_KEY);
   if (raw === null) return [];
+  let parsed: unknown;
   try {
-    return JSON.parse(raw) as ExperienceLibrary;
+    parsed = JSON.parse(raw);
   } catch {
     return [];
   }
+  const result = experienceLibrarySchema.safeParse(parsed);
+  return result.success ? result.data : [];
 }
