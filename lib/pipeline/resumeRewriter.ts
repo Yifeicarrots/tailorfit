@@ -2,7 +2,12 @@ import "server-only";
 import { z } from "zod";
 import type { CallClaude } from "@/lib/claude";
 import type { Experience, RewriteResult } from "@/lib/types";
-import { buildRewritePrompt, REWRITER_SYSTEM_PROMPT } from "./prompts";
+import {
+  buildRewritePrompt,
+  buildRewriteRetryPrompt,
+  REWRITER_SYSTEM_PROMPT,
+} from "./prompts";
+import { checkNoInvention } from "./validate";
 
 export type RewriteOutcome =
   | { ok: true; result: RewriteResult }
@@ -116,5 +121,49 @@ export async function rewriteResume(
       error: "Claude returned an invalid rewrite response twice",
     };
   }
-  return { ok: true, result: toRewriteResult(input.experiences, response) };
+  const result = toRewriteResult(input.experiences, response);
+
+  const feedback = result.items.flatMap((item) =>
+    item.bullets.flatMap((b) => {
+      const check = checkNoInvention(b.original, b.rewritten);
+      return check.ok
+        ? []
+        : [{ itemId: item.id, bulletId: b.id, problems: check.problems }];
+    }),
+  );
+  if (feedback.length === 0) return { ok: true, result };
+
+  const failingKeys = new Set(feedback.map((f) => bulletKey(f.itemId, f.bulletId)));
+  const failingExperiences = input.experiences
+    .map((e) => ({
+      ...e,
+      bullets: e.bullets.filter((b) => failingKeys.has(bulletKey(e.id, b.id))),
+    }))
+    .filter((e) => e.bullets.length > 0);
+  const retry = await requestRewrite(
+    callClaude,
+    buildRewriteRetryPrompt(failingExperiences, input.jobDescription, feedback),
+    failingExperiences,
+  );
+  const retryRewrites = retry ? rewritesByKey(retry) : new Map<string, string>();
+
+  for (const f of feedback) {
+    const key = bulletKey(f.itemId, f.bulletId);
+    const bullet = result.items
+      .find((i) => i.id === f.itemId)
+      ?.bullets.find((b) => b.id === f.bulletId);
+    if (!bullet) continue;
+    const candidate = retryRewrites.get(key);
+    const check = candidate
+      ? checkNoInvention(bullet.original, candidate)
+      : { ok: false as const, problems: f.problems };
+    if (candidate && check.ok) {
+      bullet.rewritten = candidate;
+    } else {
+      bullet.rewritten = bullet.original;
+      bullet.flagged = true;
+      bullet.flagReason = (check.ok ? f.problems : check.problems).join("; ");
+    }
+  }
+  return { ok: true, result };
 }

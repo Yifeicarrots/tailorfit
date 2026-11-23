@@ -28,3 +28,20 @@ ${jobDescription}
 ${JSON.stringify(items, null, 2)}
 </experiences>`;
 }
+
+// `feedback` holds one entry per bullet that failed the no-invention check.
+export function buildRewriteRetryPrompt(
+  experiences: Experience[],
+  jobDescription: string,
+  feedback: { itemId: string; bulletId: string; problems: string[] }[],
+): string {
+  const lines = feedback.map(
+    (f) => `- ${f.itemId} / ${f.bulletId}: ${f.problems.join("; ")}`,
+  );
+  return `${buildRewritePrompt(experiences, jobDescription)}
+
+<feedback>
+Your previous rewrites of these bullets added content that is not in the original bullet. Rewrite them again without adding it.
+${lines.join("\n")}
+</feedback>`;
+}
