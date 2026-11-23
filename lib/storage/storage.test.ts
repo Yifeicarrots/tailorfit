@@ -54,4 +54,10 @@ describe("experience library storage", () => {
   it("returns an empty library when nothing is stored", () => {
     expect(loadLibrary(fakeStore())).toEqual([]);
   });
+
+  it("returns an empty library instead of throwing on corrupted JSON", () => {
+    const store = fakeStore();
+    store.data.set("tailorfit:library", "{not valid json");
+    expect(loadLibrary(store)).toEqual([]);
+  });
 });
