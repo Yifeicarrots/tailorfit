@@ -178,3 +178,23 @@ describe("selectExperiences — IDs that aren't in the library", () => {
     expect(outcome).toEqual({ ok: false, error: expect.any(String) });
   });
 });
+
+describe("selectExperiences — privacy", () => {
+  it("never logs, even when an attempt fails", async () => {
+    const methods = ["log", "info", "warn", "error", "debug"] as const;
+    const spies = methods.map((m) =>
+      vi.spyOn(console, m).mockImplementation(() => {}),
+    );
+    const callClaude = claudeReturnsInOrder(
+      "not json",
+      JSON.stringify(validResponse),
+    );
+
+    await selectExperiences({ library, jobDescription }, callClaude);
+
+    for (const spy of spies) {
+      expect(spy).not.toHaveBeenCalled();
+      spy.mockRestore();
+    }
+  });
+});
