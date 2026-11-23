@@ -22,7 +22,9 @@ function fakeMessage(
 }
 
 function fakeClient(message: BetaMessage) {
-  const create = vi.fn(async (_params: CreateParams) => message);
+  const create = vi.fn<(params: CreateParams) => Promise<BetaMessage>>(
+    async () => message,
+  );
   const client: ClaudeClient = { beta: { messages: { create } } };
   return { client, create };
 }

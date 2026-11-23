@@ -48,10 +48,12 @@ describe("experienceSchema", () => {
   });
 
   it("accepts a project without an organization", () => {
-    const { organization: _omitted, ...project } = validExperience;
-    expect(
-      experienceSchema.safeParse({ ...project, type: "project" }).success,
-    ).toBe(true);
+    const project: Record<string, unknown> = {
+      ...validExperience,
+      type: "project",
+    };
+    delete project.organization;
+    expect(experienceSchema.safeParse(project).success).toBe(true);
   });
 
   it("accepts a null endDate for a current role", () => {
