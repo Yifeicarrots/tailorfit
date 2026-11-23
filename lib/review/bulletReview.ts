@@ -61,3 +61,19 @@ export function reviewReducer(
     })),
   };
 }
+
+export function isComplete(state: ReviewState): boolean {
+  return state.items.every((item) =>
+    item.bullets.every((b) => b.status !== "pending"),
+  );
+}
+
+export function finalBullets(
+  state: ReviewState,
+): { id: string; title: string; bullets: string[] }[] {
+  return state.items.map((item) => ({
+    id: item.id,
+    title: item.title,
+    bullets: item.bullets.map((b) => b.finalText ?? b.original),
+  }));
+}
