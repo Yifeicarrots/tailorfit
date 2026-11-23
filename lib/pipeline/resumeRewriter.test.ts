@@ -38,6 +38,12 @@ const validResponse = {
   ],
 };
 
+function claudeReturnsInOrder(...texts: string[]) {
+  const callClaude = vi.fn<CallClaude>();
+  texts.forEach((t) => callClaude.mockResolvedValueOnce(t));
+  return callClaude;
+}
+
 describe("rewriteResume — valid response", () => {
   it("sends the job description and every bullet to Claude in one call", async () => {
     const callClaude = claudeReturns(validResponse);
@@ -83,5 +89,58 @@ describe("rewriteResume — valid response", () => {
         ],
       },
     });
+  });
+});
+
+describe("rewriteResume — invalid response", () => {
+  const valid = JSON.stringify(validResponse);
+
+  it("retries once when the response is not JSON, and uses the retry", async () => {
+    const callClaude = claudeReturnsInOrder("Sure! Here are your bullets.", valid);
+
+    const outcome = await rewriteResume({ experiences, jobDescription }, callClaude);
+
+    expect(callClaude).toHaveBeenCalledTimes(2);
+    expect(outcome.ok).toBe(true);
+  });
+
+  it("retries once when the response does not match the schema", async () => {
+    const missingBullets = JSON.stringify({ items: [{ id: "exp-cafe" }] });
+    const callClaude = claudeReturnsInOrder(missingBullets, valid);
+
+    const outcome = await rewriteResume({ experiences, jobDescription }, callClaude);
+
+    expect(callClaude).toHaveBeenCalledTimes(2);
+    expect(outcome.ok).toBe(true);
+  });
+
+  it("treats an empty rewrite as a schema failure", async () => {
+    const emptyRewrite = JSON.stringify({
+      items: [
+        {
+          id: "exp-cafe",
+          bullets: [
+            { id: "cafe-1", rewritten: "" },
+            { id: "cafe-2", rewritten: "Onboarded 3 new staff members" },
+          ],
+        },
+      ],
+    });
+    const callClaude = claudeReturnsInOrder(emptyRewrite, valid);
+
+    const outcome = await rewriteResume({ experiences, jobDescription }, callClaude);
+
+    expect(callClaude).toHaveBeenCalledTimes(2);
+    expect(outcome.ok).toBe(true);
+  });
+
+  it("returns an error without the response text after two invalid responses", async () => {
+    const callClaude = claudeReturnsInOrder("not json at all", "still not json");
+
+    const outcome = await rewriteResume({ experiences, jobDescription }, callClaude);
+
+    expect(callClaude).toHaveBeenCalledTimes(2);
+    expect(outcome).toEqual({ ok: false, error: expect.any(String) });
+    expect(!outcome.ok && outcome.error).not.toContain("not json");
   });
 });
