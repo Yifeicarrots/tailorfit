@@ -150,4 +150,31 @@ describe("selectExperiences — IDs that aren't in the library", () => {
     expect(callClaude).toHaveBeenCalledTimes(2);
     expect(outcome).toEqual({ ok: true, result: validResponse });
   });
+
+  it("retries the whole call once when an ID appears twice", async () => {
+    const duplicate = JSON.stringify({
+      selected: [
+        { id: "exp-cafe", reason: "Handled payments" },
+        { id: "exp-cafe", reason: "Trained staff" },
+      ],
+    });
+    const callClaude = claudeReturnsInOrder(duplicate, valid);
+
+    const outcome = await selectExperiences({ library, jobDescription }, callClaude);
+
+    expect(callClaude).toHaveBeenCalledTimes(2);
+    expect(outcome).toEqual({ ok: true, result: validResponse });
+  });
+
+  it("returns an error after two responses with unknown IDs", async () => {
+    const unknownId = JSON.stringify({
+      selected: [{ id: "exp-ghost", reason: "Sounds relevant" }],
+    });
+    const callClaude = claudeReturnsInOrder(unknownId, unknownId);
+
+    const outcome = await selectExperiences({ library, jobDescription }, callClaude);
+
+    expect(callClaude).toHaveBeenCalledTimes(2);
+    expect(outcome).toEqual({ ok: false, error: expect.any(String) });
+  });
 });
