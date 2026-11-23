@@ -43,7 +43,13 @@ export function loadLibraryWithBackup(store: KeyValueStore): {
 } {
   const raw = store.getItem(LIBRARY_KEY);
   if (raw === null) return { library: [], backedUp: false };
-  const result = experienceLibrarySchema.safeParse(JSON.parse(raw));
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    parsed = undefined;
+  }
+  const result = experienceLibrarySchema.safeParse(parsed);
   if (result.success) return { library: result.data, backedUp: false };
   store.setItem(LIBRARY_BACKUP_KEY, raw);
   return { library: [], backedUp: true };
