@@ -124,4 +124,14 @@ describe("selectExperiences — invalid response", () => {
     expect(callClaude).toHaveBeenCalledTimes(2);
     expect(outcome).toEqual({ ok: true, result: validResponse });
   });
+
+  it("returns an error without the response text after two invalid responses", async () => {
+    const callClaude = claudeReturnsInOrder("not json at all", "still not json");
+
+    const outcome = await selectExperiences({ library, jobDescription }, callClaude);
+
+    expect(callClaude).toHaveBeenCalledTimes(2);
+    expect(outcome).toEqual({ ok: false, error: expect.any(String) });
+    expect(!outcome.ok && outcome.error).not.toContain("not json");
+  });
 });
