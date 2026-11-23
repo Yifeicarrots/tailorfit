@@ -73,3 +73,32 @@ describe("accept", () => {
     expect(bullet(state, "b:0")?.status).toBe("pending");
   });
 });
+
+describe("edit", () => {
+  it("uses the user's text as the final text", () => {
+    const state = reviewReducer(initReview(result), {
+      type: "edit",
+      key: "b:0",
+      text: "Led z end to end",
+    });
+
+    expect(bullet(state, "b:0")).toMatchObject({
+      status: "edited",
+      finalText: "Led z end to end",
+    });
+  });
+
+  it("replaces an earlier accept", () => {
+    const accepted = reviewReducer(initReview(result), { type: "accept", key: "a:0" });
+    const state = reviewReducer(accepted, {
+      type: "edit",
+      key: "a:0",
+      text: "Shipped x",
+    });
+
+    expect(bullet(state, "a:0")).toMatchObject({
+      status: "edited",
+      finalText: "Shipped x",
+    });
+  });
+});
