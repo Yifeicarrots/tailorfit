@@ -76,7 +76,38 @@ export function experienceFromForm(values: ExperienceFormValues): FormResult {
       .map((b) => ({ id: b.id, text: b.text.trim() }))
       .filter((b) => b.text !== ""),
   };
+  const errors: FormErrors = {};
   const result = experienceSchema.safeParse(candidate);
-  if (result.success) return { ok: true, experience: result.data };
-  return { ok: false, errors: {} };
+  if (!result.success) {
+    for (const issue of result.error.issues) {
+      const field = issue.path[0];
+      if (typeof field === "string" && field in schemaMessages) {
+        errors[field as FormField] ??= schemaMessages[field as FormField];
+      }
+    }
+  }
+
+  // Form-only rules, kept out of the shared schema in lib/types.ts.
+  if (!values.current && values.endDate === "") {
+    errors.endDate = schemaMessages.endDate;
+  } else if (
+    !values.current &&
+    values.startDate !== "" &&
+    values.endDate < values.startDate
+  ) {
+    errors.endDate = "End month can't be before the start month.";
+  }
+
+  if (result.success && Object.keys(errors).length === 0) {
+    return { ok: true, experience: result.data };
+  }
+  return { ok: false, errors };
 }
+
+const schemaMessages: Record<FormField, string> = {
+  title: "Add a title.",
+  organization: "Organization can't be only spaces.",
+  startDate: "Pick a start month.",
+  endDate: "Pick an end month, or tick Current.",
+  bullets: "Add at least one bullet point.",
+};
