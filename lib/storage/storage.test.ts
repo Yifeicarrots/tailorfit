@@ -86,6 +86,14 @@ describe("loading the library with a backup of invalid data", () => {
     expect(loadLibraryWithBackup(store)).toEqual({ library, backedUp: false });
     expect(store.data.has("tailorfit:library:backup")).toBe(false);
   });
+
+  it("copies data that fails the schema to the backup key and reports it", () => {
+    const store = fakeStore();
+    const raw = JSON.stringify([{ ...library[0], bullets: [] }]);
+    store.data.set("tailorfit:library", raw);
+    expect(loadLibraryWithBackup(store)).toEqual({ library: [], backedUp: true });
+    expect(store.data.get("tailorfit:library:backup")).toBe(raw);
+  });
 });
 
 describe("demo user name storage", () => {
