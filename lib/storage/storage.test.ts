@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   clearUserName,
   loadLibrary,
+  loadLibraryWithBackup,
   loadUserName,
   saveLibrary,
   saveUserName,
@@ -69,6 +70,21 @@ describe("experience library storage", () => {
     const noBullets = [{ ...library[0], bullets: [] }];
     store.data.set("tailorfit:library", JSON.stringify(noBullets));
     expect(loadLibrary(store)).toEqual([]);
+  });
+});
+
+describe("loading the library with a backup of invalid data", () => {
+  it("returns an empty library and no backup when nothing is stored", () => {
+    const store = fakeStore();
+    expect(loadLibraryWithBackup(store)).toEqual({ library: [], backedUp: false });
+    expect(store.data.has("tailorfit:library:backup")).toBe(false);
+  });
+
+  it("returns a valid library without writing a backup", () => {
+    const store = fakeStore();
+    saveLibrary(store, library);
+    expect(loadLibraryWithBackup(store)).toEqual({ library, backedUp: false });
+    expect(store.data.has("tailorfit:library:backup")).toBe(false);
   });
 });
 
