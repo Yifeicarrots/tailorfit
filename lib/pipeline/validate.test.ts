@@ -155,4 +155,18 @@ describe("checkSelectionIds", () => {
 
     expect(checkSelectionIds(selection, library)).toEqual({ ok: true });
   });
+
+  it("rejects an ID that is not in the library, naming it", () => {
+    const selection = {
+      selected: [
+        { id: "exp-cafe", reason: "Shows customer service" },
+        { id: "exp-ghost", reason: "Sounds relevant" },
+      ],
+    };
+
+    const check = checkSelectionIds(selection, library);
+
+    expect(check.ok).toBe(false);
+    expect(!check.ok && check.problems.join(" ")).toContain("exp-ghost");
+  });
 });
