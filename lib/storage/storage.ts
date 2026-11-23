@@ -4,6 +4,7 @@ import { experienceLibrarySchema, type ExperienceLibrary } from "@/lib/types";
 export type KeyValueStore = Pick<Storage, "getItem" | "setItem" | "removeItem">;
 
 const LIBRARY_KEY = "tailorfit:library";
+const LIBRARY_BACKUP_KEY = "tailorfit:library:backup";
 const USER_NAME_KEY = "tailorfit:userName";
 
 const userNameSchema = z.string().min(1);
@@ -40,7 +41,12 @@ export function loadLibraryWithBackup(store: KeyValueStore): {
   library: ExperienceLibrary;
   backedUp: boolean;
 } {
-  return { library: loadLibrary(store), backedUp: false };
+  const raw = store.getItem(LIBRARY_KEY);
+  if (raw === null) return { library: [], backedUp: false };
+  const result = experienceLibrarySchema.safeParse(JSON.parse(raw));
+  if (result.success) return { library: result.data, backedUp: false };
+  store.setItem(LIBRARY_BACKUP_KEY, raw);
+  return { library: [], backedUp: true };
 }
 
 export function saveUserName(store: KeyValueStore, name: string): void {
