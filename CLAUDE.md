@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Status
 
-Fresh `create-next-app` scaffold: `app/page.tsx` and `app/layout.tsx` are still template code. Planned dependencies are not yet installed: `@anthropic-ai/sdk`, `zod`, `vitest` (plus a `test` script).
+Fresh `create-next-app` scaffold: `app/page.tsx` and `app/layout.tsx` are still template code. `@anthropic-ai/sdk`, `zod`, and `vitest` are installed; `vitest.config.ts` excludes `evals/`. The only test is `lib/placeholder.test.ts` — delete it once real tests exist. `lib/pipeline/`, `lib/storage/`, and the `eval` script don't exist yet.
 
 **Local only.** The app runs on `localhost` and must not be deployed publicly: there is no real authentication, so a public deployment would let anyone spend the Anthropic API key.
 
