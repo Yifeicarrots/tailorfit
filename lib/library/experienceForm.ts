@@ -15,7 +15,8 @@ export type ExperienceFormValues = {
 
 export type NewId = () => string;
 
-export type FormField = "title" | "organization" | "startDate" | "endDate" | "bullets";
+// Organization has no error: a blank one is simply omitted.
+export type FormField = "title" | "startDate" | "endDate" | "bullets";
 export type FormErrors = Partial<Record<FormField, string>>;
 
 export type FormResult =
@@ -81,9 +82,7 @@ export function experienceFromForm(values: ExperienceFormValues): FormResult {
   if (!result.success) {
     for (const issue of result.error.issues) {
       const field = issue.path[0];
-      if (typeof field === "string" && field in schemaMessages) {
-        errors[field as FormField] ??= schemaMessages[field as FormField];
-      }
+      if (isFormField(field)) errors[field] ??= schemaMessages[field];
     }
   }
 
@@ -106,8 +105,11 @@ export function experienceFromForm(values: ExperienceFormValues): FormResult {
 
 const schemaMessages: Record<FormField, string> = {
   title: "Add a title.",
-  organization: "Organization can't be only spaces.",
   startDate: "Pick a start month.",
   endDate: "Pick an end month, or tick Current.",
   bullets: "Add at least one bullet point.",
 };
+
+function isFormField(key: unknown): key is FormField {
+  return typeof key === "string" && Object.hasOwn(schemaMessages, key);
+}
