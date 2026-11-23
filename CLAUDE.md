@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Status
 
-`app/page.tsx` and `app/layout.tsx` are still template code. `@anthropic-ai/sdk`, `zod`, and `vitest` are installed; `vitest.config.ts` excludes `evals/`. Built so far: the no-invention check (`lib/pipeline/validate.ts`) and the bullet comparison screen (`app/review/`, with its reducer in `lib/review/`), which runs on fixture data and a provisional type in `lib/review/provisionalRewrite.ts` until `lib/types.ts` (#1) lands. `lib/storage/`, `lib/types.ts`, and the `eval` script don't exist yet.
+`app/page.tsx` and `app/layout.tsx` are still template code. Built so far: the shared Zod schemas in `lib/types.ts`, the model constant `CLAUDE_MODEL` in `lib/config.ts`, and `callClaude` in `lib/claude.ts` (the only SDK user; `createCallClaude(client)` is the testable factory); the no-invention check (`lib/pipeline/validate.ts`); and the bullet comparison screen (`app/review/`, with its reducer in `lib/review/`), which still runs on fixture data and a provisional type in `lib/review/provisionalRewrite.ts` until it switches to `RewriteResult` from `lib/types.ts`. `vitest.config.ts` excludes `evals/` and loads `vitest.setup.ts`, which mocks `server-only` once for all tests. `lib/storage/`, demo sign-in, and the `eval` script don't exist yet.
 
 **Local only.** The app runs on `localhost` and must not be deployed publicly: there is no real authentication, so a public deployment would let anyone spend the Anthropic API key.
 
