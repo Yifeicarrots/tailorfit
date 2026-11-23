@@ -15,9 +15,16 @@ export async function selectExperiences(
   input: { library: ExperienceLibrary; jobDescription: string },
   callClaude: CallClaude,
 ): Promise<SelectionOutcome> {
-  const text = await callClaude(
-    SELECTOR_SYSTEM_PROMPT,
-    buildSelectionPrompt(input.library, input.jobDescription),
-  );
-  return { ok: true, result: selectionResultSchema.parse(JSON.parse(text)) };
+  const prompt = buildSelectionPrompt(input.library, input.jobDescription);
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const text = await callClaude(SELECTOR_SYSTEM_PROMPT, prompt);
+    let json: unknown;
+    try {
+      json = JSON.parse(text);
+    } catch {
+      continue;
+    }
+    return { ok: true, result: selectionResultSchema.parse(json) };
+  }
+  return { ok: false, error: "Claude returned an invalid selection response twice" };
 }
