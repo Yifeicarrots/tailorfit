@@ -1,4 +1,4 @@
-import type { Experience } from "@/lib/types";
+import { experienceSchema, type Experience } from "@/lib/types";
 
 // Form state for adding or editing one library item. Strings hold exactly what
 // the inputs show; conversion to an Experience trims and validates them.
@@ -14,6 +14,13 @@ export type ExperienceFormValues = {
 };
 
 export type NewId = () => string;
+
+export type FormField = "title" | "organization" | "startDate" | "endDate" | "bullets";
+export type FormErrors = Partial<Record<FormField, string>>;
+
+export type FormResult =
+  | { ok: true; experience: Experience }
+  | { ok: false; errors: FormErrors };
 
 export function emptyForm(newId: NewId): ExperienceFormValues {
   return {
@@ -54,4 +61,22 @@ export function removeBulletRow(
 ): ExperienceFormValues {
   if (values.bullets.length <= 1) return values;
   return { ...values, bullets: values.bullets.filter((b) => b.id !== bulletId) };
+}
+
+export function experienceFromForm(values: ExperienceFormValues): FormResult {
+  const organization = values.organization.trim();
+  const candidate = {
+    id: values.id,
+    type: values.type,
+    title: values.title.trim(),
+    ...(organization ? { organization } : {}),
+    startDate: values.startDate,
+    endDate: values.current ? null : values.endDate,
+    bullets: values.bullets
+      .map((b) => ({ id: b.id, text: b.text.trim() }))
+      .filter((b) => b.text !== ""),
+  };
+  const result = experienceSchema.safeParse(candidate);
+  if (result.success) return { ok: true, experience: result.data };
+  return { ok: false, errors: {} };
 }
