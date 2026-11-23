@@ -33,6 +33,21 @@ export function initReview(result: ProvisionalRewriteResult): ReviewState {
   };
 }
 
+// Accepting a flagged bullet keeps its original, since its rewrite failed
+// the no-invention check.
+function applyAction(bullet: ReviewBullet, action: ReviewAction): ReviewBullet {
+  switch (action.type) {
+    case "accept":
+      return {
+        ...bullet,
+        status: "accepted",
+        finalText: bullet.flagged ? bullet.original : bullet.rewritten,
+      };
+    case "edit":
+      return { ...bullet, status: "edited", finalText: action.text };
+  }
+}
+
 export function reviewReducer(
   state: ReviewState,
   action: ReviewAction,
@@ -41,15 +56,7 @@ export function reviewReducer(
     items: state.items.map((item) => ({
       ...item,
       bullets: item.bullets.map((b) =>
-        b.key !== action.key
-          ? b
-          : action.type === "edit"
-            ? { ...b, status: "edited", finalText: action.text }
-            : {
-                ...b,
-                status: "accepted",
-                finalText: b.flagged ? b.original : b.rewritten,
-              },
+        b.key === action.key ? applyAction(b, action) : b,
       ),
     })),
   };
