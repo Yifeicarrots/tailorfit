@@ -1,0 +1,1523 @@
+================================================================================
+ANNOTATED SESSION LOG 02: TDD (Part 3) and Explore -> Plan -> Implement ->
+Commit (Part 2)
+TailorFit, issues #6 (no-invention check) and #7 (bullet comparison screen)
+Session date: 2026-11-22, about 7:55-8:17 PM. Exported with
+/export docs/session-logs/02-tdd-and-plan-mode.txt
+================================================================================
+
+HOW TO READ THIS
+Everything below is the raw /export output, unchanged. Lines starting with
+">>>" are annotations added afterwards. Search for ">>> [" to jump between
+them.
+
+"Ran N shell commands (ctrl+o to expand)" means the export collapsed those
+commands. Where a collapsed command matters (test runs, commits), the
+annotation gives the commit hash so you can check it in `git log`.
+
+TAGS
+  [CONTEXT]     how context was loaded or managed
+  [EXPLORE]     reading code and docs before designing
+  [PLAN]        plan mode, clarifying questions, the approved plan
+  [IMPLEMENT]   carrying out the plan
+  [COMMIT]      a commit or push (hash given)
+  [RED]         failing test written first and seen to fail
+  [GREEN]       minimum code to pass; the test is not modified
+  [REFACTOR]    cleanup with the tests still green
+  [HUMAN]       a decision made by the person, not by Claude
+  [PERMISSIONS] the permission rules or safety checks shaping a step
+  [VERIFY]      checking the result (tests, lint, build, browser)
+
+TIMELINE (the commits this session made, in order)
+  Part 3, TDD on the no-invention check (lib/pipeline/validate.ts):
+    d645537 [red]      invented numbers
+    89d00a3 [green]    invented numbers
+    ef36e6b refactor   extract number pattern
+    fbcdaeb [red]      invented skills and employers
+    5620a56 [green]    invented skills and employers
+    b090430 refactor   split into number and term helpers
+  Part 2, #7 comparison screen, with three more TDD cycles inside Implement:
+    232237b docs       the approved plan, committed
+    0e0f1ff feat       provisional type and fictional fixture
+    d91c1c3 [red]      init review state and accept a bullet
+    939b470 [green]    init review state and accept a bullet
+    9a9c94b [red]      edit a bullet, including after accepting it
+    a8bf471 [green]    edit a bullet, including after accepting it
+    5fde73a refactor   move per-bullet updates into a switch
+    9452626 [red]      completeness check and final bullets
+    da516c7 [green]    completeness check and final bullets
+    7cfc9b4 feat       the comparison screen (UI; TDD not required for UI)
+    5d60ef0 chore      remove placeholder test, update CLAUDE.md status
+================================================================================
+
+▗ ▗   ▖ ▖  Claude Code v2.1.308
+           Opus 5.5 · Claude Enterprise
+ ▘▘   ▝▝   ~/Documents/AI Coding Course/tailorfit
+
+⚠ Your login expires in 2 days · run /login to renew
+
+
+>>> [CONTEXT] A new session. The prompt gives roles, issue numbers and the goal
+>>> in one paragraph, with no explanation of the stack or project. That is
+>>> enough because CLAUDE.md loads automatically and imports @AGENTS.md and
+>>> @docs/PRD.md, so Claude already knows the Next 16 setup, the TDD rules, the
+>>> commit format and the no-invention requirement. The pasted assignment text
+>>> tells Claude what the git history needs to show.
+
+❯ Yanni and I are pair-building TailorFit for the P3 Claude Code workflow       
+  assignment. Yanni owns #1, #2, #3, #5. I'm taking #6 (rewriter, Part 3 TDD)   
+  and #7 (comparison screen, Part 2), maybe #4. #1 (lib/types.ts) isn't merged  
+  yet. Assign #6 and #7 to me, then start the strict TDD on the no-invention    
+  check in lib/pipeline/validate.ts (red commit first)........                  
+  Please complete this in pairs                                                 
+                                                                                
+  Objective                                                                     
+  Demonstrate mastery of the Claude Code development workflow by setting up a   
+  project, using the Explore→Plan→Implement→Commit pattern, and doing TDD       
+  through Claude Code.                                                          
+                                                                                
+  Part 1: Claude Code Project Setup (25%)                                       
+  Set up Claude Code for your P3 project:                                       
+                                                                                
+  Write a comprehensive CLAUDE.md (project context, stack, conventions,         
+  do's/don'ts)                                                                  
+  Configure permissions (allowlists or sandboxing)                              
+  Demonstrate /init output and iterate on CLAUDE.md based on it                 
+  Show context management strategy (/clear, /compact, --continue)               
+  Requirements: CLAUDE.md must include: tech stack, architecture decisions,     
+  coding conventions, testing strategy, and project-specific do's/don'ts. At    
+  least one @import reference to additional context (e.g., PRD, API docs).      
+                                                                                
+  Part 2: Explore → Plan → Implement → Commit (30%)                             
+  Use Claude Code's recommended 4-phase workflow on a real P3 feature:          
+                                                                                
+  Explore: Use Glob, Grep, Read to understand existing code                     
+  Plan: Use Plan mode to design the approach                                    
+  Implement: Execute the plan with Claude Code                                  
+  Commit: Create clean commits with meaningful messages                         
+  Requirements: Git history must clearly show this workflow. At least 3 commits 
+  demonstrating the pattern.                                                    
+                                                                                
+  Part 3: TDD with Claude Code (30%)                                            
+  Build a P3 feature using strict TDD through Claude Code:                      
+                                                                                
+  Write failing tests first                                                     
+  Have Claude Code implement minimum code to pass                               
+  Refactor                                                                      
+  Repeat for all acceptance criteria                                            
+  Requirements: Tests written BEFORE implementation. Git history shows          
+  red-green-refactor commits. Clear commit messages showing TDD process.        
+                                                                                
+  Part 4: Reflection (15%)                                                      
+  Write a 1-2 page reflection answering:                                        
+                                                                                
+  How does the Explore→Plan→Implement→Commit workflow compare to your previous  
+  approach?                                                                     
+  What context management strategies worked best?                               
+  Include annotated Claude Code session log showing your workflow               
+  Deliverables                                                                  
+  P3 repository with CLAUDE.md and permissions configuration                    
+  Feature code with TDD git history (red-green-refactor commits)                
+  Annotated Claude Code session log                                             
+  Reflection document (1-2 pages)                                               
+  Rubric (50 points)                                                            
+  Criterion    Weight                                                           
+  CLAUDE.md & project setup    25%                                              
+  Explore→Plan→Implement→Commit workflow    30%                                 
+  TDD process through Claude Code    30%                                        
+  Reflection & session log    15%                                               
+  ....... The above is the homework requirement.                                
+
+
+>>> [CONTEXT] Claude loads its TDD skill before acting. This reinforces the "Red
+>>> step: write only the failing test" rule in CLAUDE.md.
+
+⏺ Skill(superpowers:test-driven-development)
+  ⎿  Successfully loaded skill
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+
+>>> [PERMISSIONS] `gh issue edit` assigns #6 and #7. The command is on the "ask"
+>>> list in .claude/settings.json (commit ce5bccc), so it needed approval.
+
+⏺ Assigning #6 and #7 to you:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+
+>>> [IMPLEMENT] Design choice: the check takes two plain strings rather than the
+>>> shared Zod schemas, which #1 hasn't merged yet. This keeps my work from
+>>> being blocked on Yanni's issue.
+
+⏺ The no-invention check will run on plain strings, so it doesn't depend on the
+  unmerged schemas in lib/types.ts. I'll start with a test for invented numbers,
+  one behavior per red/green cycle.
+
+
+>>> [RED] Cycle 1 (numbers). The test file is written first, and validate.ts
+>>> doesn't exist yet.
+
+⏺ Write(lib/pipeline/validate.test.ts)
+  ⎿  Wrote 46 lines to lib/pipeline/validate.test.ts
+      1 import { describe, expect, it } from "vitest";
+      2 import { checkNoInvention } from "./validate";
+      3 
+      4 describe("checkNoInvention — numbers", () => {
+      5   it("accepts a rewrite that adds no numbers", () => {
+      6     const result = checkNoInvention(
+      7       "Built a dashboard for the campus food bank",
+      8       "Developed an inventory dashboard for a campus food bank",
+      9     );
+     … +37 lines (ctrl+o to expand)
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+
+>>> [PERMISSIONS] node_modules was missing, and package-lock.json was out of
+>>> sync, so `npm ci` failed. Claude didn't silently rewrite the shared
+>>> lockfile. It installed with --no-save and raised the lockfile as a decision
+>>> for both teammates (CLAUDE.md: "Ask before adding any dependency").
+
+⏺ node_modules is missing (the deps are in package.json and the lockfile but
+  were never installed in this checkout). npm ci installs exactly what the
+  lockfile records, with nothing new added:
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+⏺ The lockfile is slightly out of sync with package.json (missing optional
+  @emnapi/* entries), so I'll install with --no-save to leave it unchanged.
+  Whether to fix the lockfile is a decision for you and Yanni.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+
+>>> [RED] [COMMIT] The test fails for the expected reason (the module doesn't
+>>> exist). It's committed as d645537 test(rewriter): [red] no-invention check
+>>> rejects invented numbers.
+
+⏺ It fails the right way: validate.ts doesn't exist yet, and the lockfile is
+  unchanged. Committing the red step:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ I assigned #6 and #7 to you and made the first red commit, d645537 
+  test(rewriter): [red] no-invention check rejects invented numbers. It's
+  committed locally but not pushed.
+
+  What the test covers (lib/pipeline/validate.test.ts):
+  checkNoInvention(original, rewritten) returns { ok: true } or { ok: false, 
+  problems: string[] }. The four cases are:
+  - a rewrite with no numbers passes
+  - a rewrite that reuses the original's numbers passes
+  - an invented 40% is rejected, and the problem message names it
+  - every invented number gets named, not just the first (3, 150)
+
+  Red result: the suite fails because ./validate doesn't exist yet. The
+  placeholder test still passes.
+
+  Why plain strings: the check takes two strings instead of the schemas from #1,
+  so it doesn't wait on Yanni's merge. The list of problems is also what the
+  "retry with feedback naming the problem" step will need.
+
+  Two things you should know:
+  1. node_modules wasn't installed, and package-lock.json is out of sync with 
+     package.json. It's missing some @emnapi/* packages that the installed ones
+     depend on, so npm ci fails. I installed with npm install --no-save so the
+     shared lockfile stayed the same. One of you should run npm install and
+     commit the updated lockfile as a chore: commit. Coordinate with Yanni so
+     you don't both do it.
+  2. Detecting invented skills and employers needs a design decision before its 
+     red test. Numbers are easy to check. Skills and employers aren't: rewrites
+     are supposed to borrow the job description's wording, so the check has to
+     catch a skill that appears in the job description but not in the original.
+     I'd suggest flagging tech-looking or proper-noun words (capitalised
+     mid-sentence, acronyms, words like C++ or Node.js) that appear in the
+     rewrite but not in the original. Do you want that heuristic, or something
+     else, such as passing in a list of known skill and employer names?
+
+  Next is the green step: the smallest validate.ts that makes these four tests
+  pass, without touching the test. Then a refactor commit if needed, then the
+  next red cycle. Shall I continue with green?
+
+
+>>> [HUMAN] Claude stopped after the red commit instead of continuing. Detecting
+>>> invented skills is a design decision, not a mechanical one, so Claude
+>>> proposed a heuristic and asked. My answer comes next.
+
+✻ Cooked for 1m 9s · done 8:03 PM
+
+❯ yes go green, use the heuristic for skills                                    
+
+
+>>> [GREEN] Cycle 1. The smallest implementation that passes: numbers in the
+>>> rewrite that aren't in the original. The test file is not touched. Commit
+>>> 89d00a3.
+
+⏺ Write(lib/pipeline/validate.ts)
+  ⎿  Wrote 13 lines to lib/pipeline/validate.ts
+       1 export type NoInventionResult = { ok: true } | { ok: false; prob
+         lems: string[] };
+       3 export function checkNoInvention(
+       4   original: string,
+       5   rewritten: string,
+       7   const originalNumbers = new Set(original.match(/\d+(?:[.,]\d+)
+         *%?/g) ?? []);
+       8   const problems = (rewritten.match(/\d+(?:[.,]\d+)*%?/g) ?? [])
+      10     .map((n) => `Invented number "${n}" is not in the original b
+         ullet`);
+     … +7 lines (ctrl+o to expand)
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+
+>>> [REFACTOR] Cycle 1. The duplicated regex is pulled into NUMBER_PATTERN plus
+>>> extractNumbers(). Tests stay green. Commit ef36e6b.
+
+⏺ Refactor: the number pattern appears twice, so I'll pull it into one helper.
+
+⏺ Write(lib/pipeline/validate.ts)
+  ⎿  Added 8 lines, removed 2 lines
+       1  export type NoInventionResult = { ok: true } | { ok: false; pro
+          blems: string[] };
+       2  
+       3 +const NUMBER_PATTERN = /\d+(?:[.,]\d+)*%?/g;                   
+       4 +                                                               
+       5 +function extractNumbers(text: string): string[] {              
+       6 +  return text.match(NUMBER_PATTERN) ?? [];                     
+       7 +}                                                              
+       8 +                                                               
+       9  export function checkNoInvention(
+      10    original: string,
+      11    rewritten: string,
+      12  ): NoInventionResult {
+       7 -  const originalNumbers = new Set(original.match(/\d+(?:[.,]\d+
+         -)*%?/g) ?? []);                                                
+       8 -  const problems = (rewritten.match(/\d+(?:[.,]\d+)*%?/g) ?? []
+         -)                                                              
+      13 +  const originalNumbers = new Set(extractNumbers(original));   
+      14 +  const problems = extractNumbers(rewritten)                   
+      15      .filter((n) => !originalNumbers.has(n))
+      16      .map((n) => `Invented number "${n}" is not in the original 
+          bullet`);
+      17  
+
+  Ran 1 shell command (ctrl+o to expand)
+
+
+>>> [RED] Cycle 2 (skills and employers). These seven tests are the
+>>> specification for the heuristic I approved: the first word isn't flagged,
+>>> and capitalised words, acronyms, C++ and Node.js are.
+
+⏺ Now the next red cycle: skills and employers, using the heuristic. These cases
+  set the rules:
+
+⏺ Update(lib/pipeline/validate.test.ts)
+  ⎿  Added 77 lines
+       44      ]);
+       45    });
+       46  });
+       47 +                                                              
+       48 +describe("checkNoInvention — skills and employers", () => {   
+       49 +  it("does not flag a new capitalized word at the start of the
+          + bullet", () => {                                             
+       50 +    const result = checkNoInvention(                          
+       51 +      "made posters for club events",                         
+       52 +      "Designed posters for club events",                     
+       53 +    );                                                        
+       54 +                                                              
+       55 +    expect(result).toEqual({ ok: true });                     
+       56 +  });                                                         
+       57 +                                                              
+       58 +  it("rejects a capitalized technology absent from the origina
+          +l", () => {                                                   
+       59 +    const result = checkNoInvention(                          
+       60 +      "Built a website for a local bakery",                   
+       61 +      "Built a React website for a local bakery",             
+       62 +    );                                                        
+       63 +                                                              
+       64 +    expect(!result.ok && result.problems).toEqual([           
+       65 +      expect.stringContaining("React"),                       
+       66 +    ]);                                                       
+       67 +  });                                                         
+       68 +                                                              
+       69 +  it("rejects an acronym absent from the original, even as the
+          + first word", () => {                                         
+       70 +    const result = checkNoInvention(                          
+       71 +      "Analyzed survey results",                              
+       72 +      "SQL-driven analysis of survey results",                
+       73 +    );                                                        
+       74 +                                                              
+       75 +    expect(!result.ok && result.problems).toEqual([           
+       76 +      expect.stringContaining("SQL"),                         
+       77 +    ]);                                                       
+       78 +  });                                                         
+       79 +                                                              
+       80 +  it("rejects technology names written with symbols", () => { 
+       81 +    const result = checkNoInvention(                          
+       82 +      "Wrote backend services",                               
+       83 +      "Wrote Node.js backend services in C++",                
+       84 +    );                                                        
+       85 +                                                              
+       86 +    expect(!result.ok && result.problems).toEqual([           
+       87 +      expect.stringContaining("Node.js"),                     
+       88 +      expect.stringContaining("C++"),                         
+       89 +    ]);                                                       
+       90 +  });                                                         
+       91 +                                                              
+       92 +  it("rejects an employer absent from the original", () => {  
+       93 +    const result = checkNoInvention(                          
+       94 +      "Interned on the data team",                            
+       95 +      "Interned on the data team at Northwind",               
+       96 +    );                                                        
+       97 +                                                              
+       98 +    expect(!result.ok && result.problems).toEqual([           
+       99 +      expect.stringContaining("Northwind"),                   
+      100 +    ]);                                                       
+      101 +  });                                                         
+      102 +                                                              
+      103 +  it("accepts terms from the original regardless of case or pu
+          +nctuation", () => {                                           
+      104 +    const result = checkNoInvention(                          
+      105 +      "Built a react app with firebase.",                     
+      106 +      "Shipped a React app backed by Firebase",               
+      107 +    );                                                        
+      108 +                                                              
+      109 +    expect(result).toEqual({ ok: true });                     
+      110 +  });                                                         
+      111 +                                                              
+      112 +  it("reports invented numbers and skills together", () => {  
+      113 +    const result = checkNoInvention(                          
+      114 +      "Improved the search page",                             
+      115 +      "Improved search page speed by 30% using Redis",        
+      116 +    );                                                        
+      117 +                                                              
+      118 +    expect(!result.ok && result.problems).toEqual([           
+      119 +      expect.stringContaining("30%"),                         
+      120 +      expect.stringContaining("Redis"),                       
+      121 +    ]);                                                       
+      122 +  });                                                         
+      123 +});                                                           
+
+  Ran 1 shell command (ctrl+o to expand)
+
+
+>>> [RED] [COMMIT] Five fail, as expected. Two already pass because they are
+>>> guard tests ("don't flag too much"), and they can only pass while nothing is
+>>> flagged yet. The commit message for fbcdaeb says so.
+
+⏺ Five tests fail as expected, and the other two already pass since nothing is
+  flagged yet; I'm committing these red tests now.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+
+>>> [GREEN] Cycle 2. The heuristic, written inline and as small as possible. No
+>>> test changes. Commit 5620a56.
+
+⏺ Green: minimal heuristic.
+
+⏺ Write(lib/pipeline/validate.ts)
+  ⎿  Added 21 lines
+      15      .filter((n) => !originalNumbers.has(n))
+      16      .map((n) => `Invented number "${n}" is not in the original 
+          bullet`);
+      17  
+      18 +  const tokenize = (text: string) =>                           
+      19 +    text                                                       
+      20 +      .split(/[\s\-/]+/)                                       
+      21 +      .map((t) => t.replace(/^[^\w]+|[^\w+#]+$/g, ""))         
+      22 +      .filter((t) => t.length > 0);                            
+      23 +                                                               
+      24 +  const originalTerms = new Set(tokenize(original).map((t) => t
+         +.toLowerCase()));                                              
+      25 +  tokenize(rewritten).forEach((term, i) => {                   
+      26 +    if (/^\d/.test(term)) return;                              
+      27 +    const looksLikeTerm =                                      
+      28 +      /[+#]/.test(term) ||                                     
+      29 +      /\w\.\w/.test(term) ||                                   
+      30 +      /^[A-Z]{2,}$/.test(term) ||                              
+      31 +      (i > 0 && /^[A-Z]/.test(term));                          
+      32 +    if (looksLikeTerm && !originalTerms.has(term.toLowerCase())
+         +) {                                                            
+      33 +      problems.push(                                           
+      34 +        `Possible invented skill or employer "${term}" is not i
+         +n the original bullet`,                                        
+      35 +      );                                                       
+      36 +    }                                                          
+      37 +  });                                                          
+      38 +                                                               
+      39    return problems.length === 0 ? { ok: true } : { ok: false, pr
+          oblems };
+      40  }
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+
+>>> [REFACTOR] Cycle 2. checkNoInvention becomes "numbers + terms", with one
+>>> helper per check. Same behaviour, all 12 tests green. Commit b090430.
+
+⏺ Refactor: split checkNoInvention into one helper per check so it reads as
+  "numbers + terms", the same shape as the number helper.
+
+⏺ Write(lib/pipeline/validate.ts)  ⎿  Added 43 lines, removed 24 lines
+       6    return text.match(NUMBER_PATTERN) ?? [];
+       7  }
+       8  
+       9 -export function checkNoInvention(                              
+      10 -  original: string,                                            
+      11 -  rewritten: string,                                           
+      12 -): NoInventionResult {                                         
+       9 +// Splits on whitespace, hyphens, and slashes, then trims surro
+         +unding                                                         
+      10 +// punctuation while keeping the + and # in names like C++ and 
+         +C#.                                                            
+      11 +function tokenize(text: string): string[] {                    
+      12 +  return text                                                  
+      13 +    .split(/[\s\-/]+/)                                         
+      14 +    .map((t) => t.replace(/^[^\w]+|[^\w+#]+$/g, ""))           
+      15 +    .filter((t) => t.length > 0);                              
+      16 +}                                                              
+      17 +                                                               
+      18 +// Heuristic for skills and employers: symbols (C++, Node.js), 
+         +acronyms,                                                      
+      19 +// or a capital letter anywhere but the bullet's first word.   
+      20 +function looksLikeSkillOrEmployer(token: string, index: number)
+         +: boolean {                                                    
+      21 +  if (/^\d/.test(token)) return false;                         
+      22 +  return (                                                     
+      23 +    /[+#]/.test(token) ||                                      
+      24 +    /\w\.\w/.test(token) ||                                    
+      25 +    /^[A-Z]{2,}$/.test(token) ||                               
+      26 +    (index > 0 && /^[A-Z]/.test(token))                        
+      27 +  );                                                           
+      28 +}                                                              
+      29 +                                                               
+      30 +function findInventedNumbers(original: string, rewritten: strin
+         +g): string[] {                                                 
+      31    const originalNumbers = new Set(extractNumbers(original));
+      14 -  const problems = extractNumbers(rewritten)                   
+      32 +  return extractNumbers(rewritten)                             
+      33      .filter((n) => !originalNumbers.has(n))
+      34      .map((n) => `Invented number "${n}" is not in the original 
+          bullet`);
+      35 +}                                                              
+      36  
+      18 -  const tokenize = (text: string) =>                           
+      19 -    text                                                       
+      20 -      .split(/[\s\-/]+/)                                       
+      21 -      .map((t) => t.replace(/^[^\w]+|[^\w+#]+$/g, ""))         
+      22 -      .filter((t) => t.length > 0);                            
+      23 -                                                               
+      37 +function findInventedTerms(original: string, rewritten: string)
+         +: string[] {                                                   
+      38    const originalTerms = new Set(tokenize(original).map((t) => t
+          .toLowerCase()));
+      25 -  tokenize(rewritten).forEach((term, i) => {                   
+      26 -    if (/^\d/.test(term)) return;                              
+      27 -    const looksLikeTerm =                                      
+      28 -      /[+#]/.test(term) ||                                     
+      29 -      /\w\.\w/.test(term) ||                                   
+      30 -      /^[A-Z]{2,}$/.test(term) ||                              
+      31 -      (i > 0 && /^[A-Z]/.test(term));                          
+      32 -    if (looksLikeTerm && !originalTerms.has(term.toLowerCase())
+         -) {                                                            
+      33 -      problems.push(                                           
+      34 -        `Possible invented skill or employer "${term}" is not i
+         -n the original bullet`,                                        
+      35 -      );                                                       
+      36 -    }                                                          
+      37 -  });                                                          
+      39 +  return tokenize(rewritten)                                   
+      40 +    .filter(                                                   
+      41 +      (t, i) =>                                                
+      42 +        looksLikeSkillOrEmployer(t, i) && !originalTerms.has(t.
+         +toLowerCase()),                                                
+      43 +    )                                                          
+      44 +    .map(                                                      
+      45 +      (t) =>                                                   
+      46 +        `Possible invented skill or employer "${t}" is not in t
+         +he original bullet`,                                           
+      47 +    );                                                         
+      48 +}                                                              
+      49  
+      50 +export function checkNoInvention(                              
+      51 +  original: string,                                            
+      52 +  rewritten: string,                                           
+      53 +): NoInventionResult {                                         
+      54 +  const problems = [                                           
+      55 +    ...findInventedNumbers(original, rewritten),               
+      56 +    ...findInventedTerms(original, rewritten),                 
+      57 +  ];                                                           
+      58    return problems.length === 0 ? { ok: true } : { ok: false, pr
+          oblems };
+      59  }
+
+  Ran 1 shell command (ctrl+o to expand)
+
+
+>>> [VERIFY] Summary of the TDD part. The heuristic's known gaps
+>>> (lowercase skills, a capital after a full stop, multi-word employers) are
+>>> listed, not hidden. Each could become its own red cycle later.
+
+⏺ The no-invention check is finished with two full red → green → refactor
+  cycles: six commits on main, local only and not pushed yet. All 12 tests pass
+  and lint is clean.
+
+  b090430 refactor(rewriter): split no-invention check into number and term 
+  helpers
+  5620a56 feat(rewriter): [green] reject rewrites with invented skills and 
+  employers
+  fbcdaeb test(rewriter): [red] no-invention check rejects invented skills and 
+  employers
+  ef36e6b refactor(rewriter): extract number pattern into a helper
+  89d00a3 feat(rewriter): [green] reject rewrites with invented numbers
+  d645537 test(rewriter): [red] no-invention check rejects invented numbers
+
+  How checkNoInvention(original, rewritten) works (lib/pipeline/validate.ts):
+  - Numbers: any number in the rewrite that isn't in the original is rejected,
+    for example 40%, 150, or the 3 in 3-day.
+  - Skills and employers: a word in the rewrite that isn't in the original is
+    flagged if it looks like a name. That means it contains +, # or an inner dot
+    (C++, Node.js), or it's an acronym (SQL), or it's capitalised anywhere
+    except the first word (React, Northwind). Matching ignores case and
+    surrounding punctuation, so react in the original allows React in the
+    rewrite.
+  - It returns { ok: true }, or { ok: false, problems } with one plain sentence
+    per problem. Those sentences are ready to send back as the retry feedback.
+
+  In the skills red commit, two of the seven new tests passed straight away.
+  They check that the first word of a bullet and words reused from the original
+  aren't flagged, so the heuristic couldn't flag too much. The commit message
+  says so.
+
+  Known gaps in the heuristic. Each would be its own red cycle if you want it
+  fixed:
+  - A skill written in lowercase isn't caught, e.g. "using docker".
+  - A capitalised word after a full stop in the middle of a bullet is wrongly
+    flagged.
+  - A multi-word employer like "Northwind Traders" gets reported as two separate
+    problems.
+
+  What's next for #6: "retry once with feedback, then keep the original text and
+  flag it" needs the rewrite result schema and callClaude from #1. Once Yanni
+  merges #1, that goes in resumeRewriter.ts. Meanwhile I could start #7 (the
+  comparison screen) in Plan mode against fixture data, which covers the Part 2
+  workflow.
+
+  Before pushing, run git pull --rebase. The package-lock.json sync issue from
+  earlier is still open, and I haven't changed the lockfile.
+
+✻ Cooked for 1m 24s · done 8:09 PM
+
+
+>>> [COMMIT] [HUMAN] I approve the push. Following CLAUDE.md, Claude runs `git
+>>> pull --rebase` first, then pushes e66450f..b090430.
+
+❯ push it, then start #7 in plan mode                                           
+
+  Pushed to main (ctrl+o to expand)
+
+⏺ Pushed (e66450f..b090430), and the suite was green after the rebase. Starting
+  #7: brainstorming first, then entering plan mode.
+
+
+>>> [PLAN] Part 2 starts with issue #7. Claude brainstorms first, then enters
+>>> plan mode, which is read-only: no files change until the plan is approved.
+
+⏺ Skill(superpowers:brainstorming)
+  ⎿  Successfully loaded skill
+
+⏺ Entered plan mode
+  Claude is now exploring and designing an implementation approach.
+
+
+>>> [EXPLORE] Claude reads the scaffold (app/page.tsx, app/layout.tsx),
+>>> app/globals.css and validate.ts. Because AGENTS.md says this Next.js version
+>>> differs from training data, it also reads the bundled Next 16 docs on Server
+>>> and Client Components. The commands are collapsed in this export, but what
+>>> they found is written up under "Explore findings" in the plan below.
+
+⏺ Explore phase. The repo is small, so I'll read it directly instead of fanning
+  out to agents.
+
+  Ran 3 shell commands (ctrl+o to expand)
+
+
+>>> [PLAN] Exploring turned up two open decisions that would change what gets
+>>> built. Claude asks about them instead of guessing.
+
+⏺ I've read enough to design this. Two open decisions change what gets built, so
+  I'll ask before writing the plan.
+
+
+>>> [HUMAN] My two decisions:
+>>> (1) The rewrite schema from #1 doesn't exist yet and may not have a
+>>> "flagReason" field. Use a local provisional type, and tell Yanni on #1 which
+>>> fields the screen needs.
+>>> (2) Put the accept/edit state in a pure reducer in lib/, so it falls under
+>>> strict TDD.
+>>> Planning surfaced the missing flagReason before any code existed.
+
+⏺ User answered Claude's questions:
+  ⎿  · The rewrite result schema from #1 doesn't exist yet, and the screen needs
+     fields it may not have, such as the reason a bullet was flagged (story 7: 
+     'show that the original was kept and why'). How should #7 handle that? → 
+     Local type + comment on #1 (Recommended)
+     · The accept/edit/flagged state for each bullet (and whether every bullet 
+     has been decided) is pure logic. Where should it live? → lib/ reducer, 
+     TDD'd (Recommended)
+
+⏺ Updated plan
+  ⎿  /plan to preview
+
+
+>>> [PLAN] I approved the plan below. It covers context, decisions, Explore
+>>> findings, design, what's out of scope, numbered steps with planned commit
+>>> messages, and how to verify.
+
+⏺ User approved Claude's plan
+  ⎿  Plan saved to: ~/.claude/plans/gentle-questing-cloud.md · /plan to edit
+     Plan: #7 Bullet comparison screen
+
+     Context
+
+     Issue #7 (stories 6 and 7): the user sees each original bullet next to its
+     rewrite and must accept or edit every one. Flagged bullets (the rewrite
+     failed the no-invention check, so the original was kept) are clearly marked
+     with the reason. A final version shows every bullet as accepted or edited.
+     It's built first against fictional fixture data and connected to the
+     rewriter's Server Action later. #1 (lib/types.ts) and #6's Server Action
+     don't exist yet. For Part 2, this feature also shows Explore → Plan →
+     Implement → Commit in the git history.
+
+     Decisions (from you):
+     - Use a provisional local type until #1 merges, and comment on #1 listing
+       the fields the screen needs.
+     - Put the review state in a reducer in lib/ and build it with strict TDD.
+
+     Explore findings
+
+     - app/page.tsx and app/layout.tsx are still the scaffold. There are no
+       components, no routes, and no lib/types.ts.
+     - app/globals.css has only background/foreground tokens. Use Tailwind
+       utilities, no component library.
+     - Next 16 docs (node_modules/next/dist/docs/01-app/01-getting-started/05-se
+       rver-and-client-components.md): pages are Server Components, and "use 
+       client" goes on interactive leaves only. Static fixture data is fine
+       under cacheComponents (no dynamic data, so no Suspense needed).
+     - lib/pipeline/validate.ts produces one problem sentence per invented term.
+       Those sentences are the natural flagReason text.
+
+     Design
+
+     Provisional type: lib/review/provisionalRewrite.ts (header comment: replace
+     with z.infer from lib/types.ts once #1 merges)
+     type ProvisionalRewriteResult = {
+       items: { id: string; title: string;
+         bullets: { original: string; rewritten: string; flagged: boolean;
+     flagReason?: string }[] }[]
+     }
+     title probably comes from the selected experience, not the rewrite result.
+     At integration we'll merge it in, so the screen's props stay the same.
+
+     Reducer: lib/review/bulletReview.ts, pure functions, no React
+     - initReview(result): one entry per bullet, keyed ${itemId}:${index},
+       status pending.
+     - reviewReducer(state, action):
+       - { type: "accept", key }: final text is the rewrite, or the original for
+         a flagged bullet; status accepted.
+       - { type: "edit", key, text }: final text is text; status edited. Works
+         from any status, so a decision can be changed.
+     - isComplete(state): true when no bullet is pending.
+     - finalBullets(state): final text grouped by item, in the original order.
+
+     UI: app/review/
+     - page.tsx: Server Component shell with heading and short instructions;
+       renders <BulletComparison result={sampleRewrite} />.
+     - BulletComparison.tsx ("use client"): useReducer over the lib reducer.
+       Groups rows by item and shows "N of M reviewed".
+       - Each row has two columns, Original | Rewrite, plus Accept / Edit. Edit
+         opens an inline textarea prefilled with the current text, with
+         Save/Cancel. A status badge shows Pending / Accepted / Edited.
+       - Flagged rows get an amber border and the note "Original kept: rewrite
+         added something not in your bullet", followed by the flagReason. The
+         right column shows the original. Accept keeps the original; Edit is
+         allowed.
+       - A Final version panel shows each item's final bullets once isComplete.
+         Until then it shows a disabled placeholder.
+     - Fixture: lib/review/sampleRewrite.ts, for a fictional person ("Maya
+       Okafor", fictional employers), 2 items and about 5 bullets, with one
+       flagged bullet whose flagReason is in validate.ts's wording.
+
+     Not in scope: export or copy (PRD), persisting review state to storage, the
+     Server Action connection (blocked on #1/#6; left unchecked on #7).
+
+     Steps and commits
+
+     1. Comment on #1 listing the fields the screen needs: per bullet original,
+        rewritten, flagged, flagReason; per item id, plus title from the
+        selected experience. Commit this plan as
+        docs/plans/2026-11-22-bullet-comparison.md: docs: plan bullet comparison
+        screen.
+     2. TDD the reducer, with separate red, green and refactor commits for each
+        cycle:
+        - initReview + accept (normal and flagged)
+        - edit (including changing an earlier decision)
+        - isComplete + finalBullets
+     3. feat(review): add provisional rewrite type and fictional fixture
+     4. feat(review): bullet comparison screen with accept, edit, and flagged 
+        states
+     5. Delete lib/placeholder.test.ts now that real tests exist, and update
+        CLAUDE.md's Status section: chore: remove placeholder test.
+     6. Run git pull --rebase, then push. Add a progress comment on #7.
+
+     Verification
+
+     - npm test: reducer tests pass, and the validate tests are still green.
+     - npm run lint and npm run build pass (build is the type-check gate).
+     - npm run dev, then open http://localhost:3000/review and check that:
+       - Accept and Edit both work.
+       - The flagged bullet shows the original and the reason.
+       - The counter updates.
+       - The final panel appears only after every bullet is decided.
+
+
+>>> [COMMIT] Step 1 of the plan: comment on issue #1 listing the fields
+>>> (the link appears below), and commit the plan to the repo as 232237b docs:
+>>> plan bullet comparison screen. The plan is now part of the git history, not
+>>> just this chat.
+
+⏺ The plan is approved. Step 1 is the comment on #1 and committing the plan doc.
+  Working directory first:
+
+⏺ Bash(cd "/Users/samuelcoe/Documents/AI Coding Course/tailorfit" && mkdir -p
+      docs/plans && cp /Users/samuelcoe/.claude/plans/gentle-questing-cloud.md
+      docs/plans/2026-…)
+  ⎿  https://github.com/Yifeicarrots/tailorfit/issues/1#issuecomment-709054
+     3680
+  ⎿  Created docs/plans/2026-11-22-bullet-comparison.md (+63 -0)
+       1 +# Plan: #7 Bullet comparison screen                            
+       2 +                                                               
+       3 +## Context                                                     
+       4 +Issue #7 (stories 6 and 7): the user sees each original bullet 
+         +next to its rewrite and must accept or edit every one. Flagged 
+         +bullets (the rewrite failed the no-invention check, so the orig
+         +inal was kept) are clearly marked with the reason. A final vers
+         +ion shows every bullet as accepted or edited. It's built first 
+         +against fictional fixture data and connected to the rewriter's 
+         +Server Action later. #1 (`lib/types.ts`) and #6's Server Action
+         + don't exist yet. For Part 2, this feature also shows Explore →
+         + Plan → Implement → Commit in the git history.                 
+       5 +                                                               
+       6 +**Decisions (from you):**                                      
+       7 +- Use a provisional local type until #1 merges, and comment on 
+         +#1 listing the fields the screen needs.                        
+       8 +- Put the review state in a reducer in `lib/` and build it with
+         + strict TDD.                                                   
+       9 +                                                               
+      10 +## Explore findings                                            
+      11 +- `app/page.tsx` and `app/layout.tsx` are still the scaffold. T
+         +here are no components, no routes, and no `lib/types.ts`.      
+      12 +- `app/globals.css` has only `background`/`foreground` tokens. 
+         +Use Tailwind utilities, no component library.                  
+      13 +- Next 16 docs (`node_modules/next/dist/docs/01-app/01-getting-
+         +started/05-server-and-client-components.md`): pages are Server 
+         +Components, and `"use client"` goes on interactive leaves only.
+         + Static fixture data is fine under `cacheComponents` (no dynami
+         +c data, so no Suspense needed).                                
+      14 +- `lib/pipeline/validate.ts` produces one problem sentence per 
+         +invented term. Those sentences are the natural `flagReason` tex
+         +t.                                                             
+      15 +                                                               
+      16 +## Design                                                      
+      17 +                                                               
+      18 +**Provisional type**: `lib/review/provisionalRewrite.ts` (heade
+         +r comment: replace with `z.infer` from `lib/types.ts` once #1 m
+         +erges)                                                         
+      19 +```ts                                                          
+      20 +type ProvisionalRewriteResult = {                              
+      21 +  items: { id: string; title: string;                          
+      22 +    bullets: { original: string; rewritten: string; flagged: bo
+         +olean; flagReason?: string }[] }[]                             
+      23 +}                                                              
+      24 +```                                                            
+      25 +`title` probably comes from the selected experience, not the re
+         +write result. At integration we'll merge it in, so the screen's
+         + props stay the same.                                          
+      26 +                                                               
+      27 +**Reducer**: `lib/review/bulletReview.ts`, pure functions, no R
+         +eact                                                           
+      28 +- `initReview(result)`: one entry per bullet, keyed `${itemId}:
+         +${index}`, status `pending`.                                   
+      29 +- `reviewReducer(state, action)`:                              
+      30 +  - `{ type: "accept", key }`: final text is the rewrite, or th
+         +e original for a flagged bullet; status `accepted`.            
+      31 +  - `{ type: "edit", key, text }`: final text is `text`; status
+         + `edited`. Works from any status, so a decision can be changed.
+      32 +- `isComplete(state)`: true when no bullet is `pending`.       
+      33 +- `finalBullets(state)`: final text grouped by item, in the ori
+         +ginal order.                                                   
+      34 +                                                               
+      35 +**UI**: `app/review/`                                          
+      36 +- `page.tsx`: Server Component shell with heading and short ins
+         +tructions; renders `<BulletComparison result={sampleRewrite} />
+         +`.                                                             
+      37 +- `BulletComparison.tsx` (`"use client"`): `useReducer` over th
+         +e lib reducer. Groups rows by item and shows "N of M reviewed".
+      38 +  - Each row has two columns, Original | Rewrite, plus Accept /
+         + Edit. Edit opens an inline textarea prefilled with the current
+         + text, with Save/Cancel. A status badge shows Pending / Accepte
+         +d / Edited.                                                    
+      39 +  - Flagged rows get an amber border and the note "Original kep
+         +t: rewrite added something not in your bullet", followed by the
+         + `flagReason`. The right column shows the original. Accept keep
+         +s the original; Edit is allowed.                               
+      40 +  - A Final version panel shows each item's final bullets once 
+         +`isComplete`. Until then it shows a disabled placeholder.      
+     … 23 more lines (ctrl+o to expand)
+
+  Ran 1 shell command (ctrl+o to expand)
+
+
+>>> [IMPLEMENT] A deviation from the plan, stated openly: the reducer tests
+>>> import the provisional type, so the type and fixture (step 3) had to come
+>>> before the TDD cycles. Committed as 0e0f1ff.
+
+⏺ Small change to the order: the reducer tests need the provisional type to
+  exist, so step 3 (type and fixture, which are data with no behavior) goes
+  before the TDD cycles.
+
+⏺ Write(lib/review/provisionalRewrite.ts)
+  ⎿  Wrote 15 lines to lib/review/provisionalRewrite.ts
+       1 // Provisional shape of the rewrite result until #1 adds the rea
+         l Zod schema
+         erges.
+       3 // `title` comes from the selected experience, merged in at inte
+         gration.
+       5   items: {
+       6     id: string;
+       7     title: string;
+       9       original: string;
+      10       rewritten: string;
+     … +8 lines (ctrl+o to expand)
+
+⏺ Write(lib/review/sampleRewrite.ts)
+  ⎿  Wrote 51 lines to lib/review/sampleRewrite.ts
+       1 import type { ProvisionalRewriteResult } from "./provisionalRewr
+         ite";
+       3 // Fictional person (Maya Okafor) and employers, tailored to a m
+         ade-up data
+       4 // analyst internship. Used to build the comparison screen befor
+       5 // rewriter's Server Action exists.
+       6 export const sampleRewrite: ProvisionalRewriteResult = {
+       7   items: [
+       9       id: "exp-library",
+      10       title: "Program Assistant, Brightwater Community Library",
+     … +54 lines (ctrl+o to expand)
+
+  Ran 1 shell command (ctrl+o to expand)
+
+
+>>> [RED] Reducer cycle 1: initReview and accept, including "accepting a flagged
+>>> bullet keeps the original". Committed as d91c1c3 once it had been seen to
+>>> fail.
+
+⏺ The LayoutProps type error comes from the scaffold's layout file, since bare
+  tsc can't see the generated route types; the build step will check it
+  properly. I'm starting TDD cycle 1 with the red tests for initReview and
+  accept.
+
+⏺ Write(lib/review/bulletReview.test.ts)
+  ⎿  Wrote 75 lines to lib/review/bulletReview.test.ts
+       1 import { describe, expect, it } from "vitest";
+       2 import { initReview, reviewReducer, type ReviewState } from "./b
+         ulletReview";
+         ite";
+       4 
+       5 const result: ProvisionalRewriteResult = {
+       6   items: [
+       8       id: "a",
+       9       title: "Item A",
+      10       bullets: [
+     … +78 lines (ctrl+o to expand)
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+
+>>> [GREEN] Reducer cycle 1. Commit 939b470.
+>>> [REFACTOR] skipped. Claude says there was nothing to clean up rather than
+>>> making an empty refactor commit.
+
+⏺ Write(lib/review/bulletReview.ts)
+  ⎿  Wrote 52 lines to lib/review/bulletReview.ts
+       1 import type { ProvisionalRewriteResult } from "./provisionalRewr
+         ite";
+       2 
+       3 export type ReviewBullet = {
+       4   key: string;
+       6   rewritten: string;
+       7   flagged: boolean;
+       8   flagReason?: string;
+       9   status: "pending" | "accepted";
+      10   finalText: string | null;
+     … +44 lines (ctrl+o to expand)
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Nothing worth refactoring yet, so I'm skipping that step for this cycle. Cycle
+  2, red: edit.
+
+
+>>> [RED] Reducer cycle 2: edit. This time the failing output is visible in the
+>>> export (the two "x" lines). Commit 9a9c94b.
+
+⏺ Bash(cd "/Users/samuelcoe/Documents/AI Coding Course/tailorfit" && cat >>
+      lib/review/bulletReview.test.ts <<'EOF'…)  ⎿       × uses the user's text as the final text 4ms
+          × replaces an earlier accept 0ms
+     ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+     … +10 lines (ctrl+o to expand)
+  ⎿  Updated lib/review/bulletReview.test.ts (+29 -0)
+       73      expect(bullet(state, "b:0")?.status).toBe("pending");
+       74    });
+       75  });
+       76 +                                                              
+       77 +describe("edit", () => {                                      
+       78 +  it("uses the user's text as the final text", () => {        
+       79 +    const state = reviewReducer(initReview(result), {         
+       80 +      type: "edit",                                           
+       81 +      key: "b:0",                                             
+       82 +      text: "Led z end to end",                               
+       83 +    });                                                       
+       84 +                                                              
+       85 +    expect(bullet(state, "b:0")).toMatchObject({              
+       86 +      status: "edited",                                       
+       87 +      finalText: "Led z end to end",                          
+       88 +    });                                                       
+       89 +  });                                                         
+       90 +                                                              
+       91 +  it("replaces an earlier accept", () => {                    
+       92 +    const accepted = reviewReducer(initReview(result), { type:
+          + "accept", key: "a:0" });                                     
+       93 +    const state = reviewReducer(accepted, {                   
+       94 +      type: "edit",                                           
+       95 +      key: "a:0",                                             
+       96 +      text: "Shipped x",                                      
+       97 +    });                                                       
+       98 +                                                              
+       99 +    expect(bullet(state, "a:0")).toMatchObject({              
+      100 +      status: "edited",                                       
+      101 +      finalText: "Shipped x",                                 
+      102 +    });                                                       
+      103 +  });                                                         
+      104 +});                                                           
+
+⏺ Both tests fail on their assertions. (The "changed on disk" note is just my
+  own append.) Committing red, then green:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+
+>>> [GREEN] Reducer cycle 2. The next three edits change only bulletReview.ts,
+>>> never the test. Commit a8bf471.
+
+⏺ Update(lib/review/bulletReview.ts)
+  ⎿  Added 1 line, removed 1 line
+       6    rewritten: string;
+       7    flagged: boolean;
+       8    flagReason?: string;
+       9 -  status: "pending" | "accepted";                              
+       9 +  status: "pending" | "accepted" | "edited";                   
+      10    finalText: string | null;
+      11  };
+      12  
+
+⏺ Update(lib/review/bulletReview.ts)
+  ⎿  Added 3 lines, removed 1 line
+      14    items: { id: string; title: string; bullets: ReviewBullet[] }
+          [];
+      15  };
+      16  
+      17 -export type ReviewAction = { type: "accept"; key: string };    
+      17 +export type ReviewAction =                                     
+      18 +  | { type: "accept"; key: string }                            
+      19 +  | { type: "edit"; key: string; text: string };               
+      20  
+      21  export function initReview(result: ProvisionalRewriteResult): R
+          eviewState {
+      22    return {
+
+⏺ Update(lib/review/bulletReview.ts)
+  ⎿  Added 9 lines, removed 7 lines
+      41      items: state.items.map((item) => ({
+      42        ...item,
+      43        bullets: item.bullets.map((b) =>
+      44 -        b.key === action.key                                   
+      45 -          ? {                                                  
+      46 -              ...b,                                            
+      47 -              status: "accepted",                              
+      48 -              finalText: b.flagged ? b.original : b.rewritten, 
+      49 -            }                                                  
+      50 -          : b,                                                 
+      44 +        b.key !== action.key                                   
+      45 +          ? b                                                  
+      46 +          : action.type === "edit"                             
+      47 +            ? { ...b, status: "edited", finalText: action.text 
+         +}                                                              
+      48 +            : {                                                
+      49 +                ...b,                                          
+      50 +                status: "accepted",                            
+      51 +                finalText: b.flagged ? b.original : b.rewritten
+         +,                                                              
+      52 +              },                                               
+      53        ),
+      54      })),
+      55    };
+
+  Ran 1 shell command (ctrl+o to expand)
+
+
+>>> [REFACTOR] Reducer cycle 2. The nested ternary from the green step becomes a
+>>> switch in applyAction(). Commit 5fde73a.
+
+⏺ Refactor: the nested ternary will get harder to read, so I'll pull the
+  per-bullet update into a switch.
+
+⏺ Update(lib/review/bulletReview.ts)
+  ⎿  Added 16 lines, removed 9 lines
+      33    };
+      34  }
+      35  
+      36 +// Accepting a flagged bullet keeps its original, since its rew
+         +rite failed                                                    
+      37 +// the no-invention check.                                     
+      38 +function applyAction(bullet: ReviewBullet, action: ReviewAction
+         +): ReviewBullet {                                              
+      39 +  switch (action.type) {                                       
+      40 +    case "accept":                                             
+      41 +      return {                                                 
+      42 +        ...bullet,                                             
+      43 +        status: "accepted",                                    
+      44 +        finalText: bullet.flagged ? bullet.original : bullet.re
+         +written,                                                       
+      45 +      };                                                       
+      46 +    case "edit":                                               
+      47 +      return { ...bullet, status: "edited", finalText: action.t
+         +ext };                                                         
+      48 +  }                                                            
+      49 +}                                                              
+      50 +                                                               
+      51  export function reviewReducer(
+      52    state: ReviewState,
+      53    action: ReviewAction,
+     ...
+      56      items: state.items.map((item) => ({
+      57        ...item,
+      58        bullets: item.bullets.map((b) =>
+      44 -        b.key !== action.key                                   
+      45 -          ? b                                                  
+      46 -          : action.type === "edit"                             
+      47 -            ? { ...b, status: "edited", finalText: action.text 
+         -}                                                              
+      48 -            : {                                                
+      49 -                ...b,                                          
+      50 -                status: "accepted",                            
+      51 -                finalText: b.flagged ? b.original : b.rewritten
+         -,                                                              
+      52 -              },                                               
+      59 +        b.key === action.key ? applyAction(b, action) : b,     
+      60        ),
+      61      })),
+      62    };
+
+  Ran 1 shell command (ctrl+o to expand)
+
+
+>>> [RED] Reducer cycle 3: isComplete and finalBullets. All three new tests fail
+>>> (the "x" lines below). Commit 9452626.
+
+⏺ Cycle 3, red: isComplete and finalBullets.
+
+⏺ Bash(cd "/Users/samuelcoe/Documents/AI Coding Course/tailorfit" && python3 -
+      <<'EOF'
+      p = "lib/review/bulletReview.test.ts"…)
+  ⎿       × is false while any bullet is pending 1ms
+          × is true once every bullet is accepted or edited 0ms
+          × lists each item's final text in the original order 0ms
+     … +12 lines (ctrl+o to expand)
+  ⎿  Updated lib/review/bulletReview.test.ts (+38 -1)
+       1  import { describe, expect, it } from "vitest";
+       2 -import { initReview, reviewReducer, type ReviewState } from "./
+         -bulletReview";                                                 
+       2 +import {                                                       
+       3 +  finalBullets,                                                
+       4 +  initReview,                                                  
+       5 +  isComplete,                                                  
+       6 +  reviewReducer,                                               
+       7 +  type ReviewAction,                                           
+       8 +  type ReviewState,                                            
+       9 +} from "./bulletReview";                                       
+      10  import type { ProvisionalRewriteResult } from "./provisionalRew
+          rite";
+      11  
+      12  const result: ProvisionalRewriteResult = {
+     ...
+      109      });
+      110    });
+      111  });
+      112 +                                                              
+      113 +function decideAll(): ReviewState {                           
+      114 +  const actions: ReviewAction[] = [                           
+      115 +    { type: "accept", key: "a:0" },                           
+      116 +    { type: "accept", key: "a:1" },                           
+      117 +    { type: "edit", key: "b:0", text: "Led z end to end" },   
+      118 +  ];                                                          
+      119 +  return actions.reduce(reviewReducer, initReview(result));   
+      120 +}                                                             
+      121 +                                                              
+      122 +describe("isComplete", () => {                                
+      123 +  it("is false while any bullet is pending", () => {          
+      124 +    const state = reviewReducer(initReview(result), { type: "a
+          +ccept", key: "a:0" });                                        
+      125 +                                                              
+      126 +    expect(isComplete(state)).toBe(false);                    
+      127 +  });                                                         
+      128 +                                                              
+      129 +  it("is true once every bullet is accepted or edited", () => 
+          +{                                                             
+      130 +    expect(isComplete(decideAll())).toBe(true);               
+      131 +  });                                                         
+      132 +});                                                           
+      133 +                                                              
+      134 +describe("finalBullets", () => {                              
+      135 +  it("lists each item's final text in the original order", () 
+          +=> {                                                          
+     … 6 more lines (ctrl+o to expand)
+
+
+>>> [GREEN] Reducer cycle 3. 21 of 21 tests pass. Commit da516c7. No refactor
+>>> was needed.
+
+⏺ Bash(cd "/Users/samuelcoe/Documents/AI Coding Course/tailorfit" && git add
+      lib/review/bulletReview.test.ts && git commit -q -F - <<'EOF'
+      test(review): [red] complete…)
+  ⎿   Test Files  3 passed (3)
+           Tests  21 passed (21)
+     da516c7 feat(review): [green] completeness check and final bullets per
+     … +3 lines (ctrl+o to expand)
+  ⎿  Updated lib/review/bulletReview.ts (+16 -0)
+      61      })),
+      62    };
+      63  }
+      64 +                                                               
+      65 +export function isComplete(state: ReviewState): boolean {      
+      66 +  return state.items.every((item) =>                           
+      67 +    item.bullets.every((b) => b.status !== "pending"),         
+      68 +  );                                                           
+      69 +}                                                              
+      70 +                                                               
+      71 +export function finalBullets(                                  
+      72 +  state: ReviewState,                                          
+      73 +): { id: string; title: string; bullets: string[] }[] {        
+      74 +  return state.items.map((item) => ({                          
+      75 +    id: item.id,                                               
+      76 +    title: item.title,                                         
+      77 +    bullets: item.bullets.map((b) => b.finalText ?? b.original)
+         +,                                                              
+      78 +  }));                                                         
+      79 +}                                                              
+
+
+>>> [IMPLEMENT] The UI from the plan: a Server Component page and one "use
+>>> client" leaf component, following the Next 16 docs read during Explore.
+>>> CLAUDE.md doesn't require TDD for UI components, so the logic was kept in
+>>> the tested reducer and the component stays thin.
+
+⏺ Nothing worth refactoring in cycle 3. Now the UI: the page shell and the
+  client comparison component.
+
+⏺ Write(app/review/BulletComparison.tsx)
+  ⎿  Wrote 186 lines to app/review/BulletComparison.tsx
+       1 "use client";
+       2 
+       3 import { useReducer, useState } from "react";
+       4 import {
+       5   finalBullets,
+       6   initReview,
+       7   isComplete,
+       8   reviewReducer,
+       9   type ReviewBullet,
+      10 } from "@/lib/review/bulletReview";
+     … +203 lines (ctrl+o to expand)
+
+⏺ Write(app/review/page.tsx)
+  ⎿  Wrote 18 lines to app/review/page.tsx
+       1 import { sampleRewrite } from "@/lib/review/sampleRewrite";
+       2 import { BulletComparison } from "./BulletComparison";
+       4 // Uses fixture data until the rewriter's Server Action exists (
+         #6).
+       5 export default function ReviewPage() {
+       7     <main className="mx-auto flex w-full max-w-4xl flex-col gap-
+         6 px-4 py-10">
+       8       <header className="flex flex-col gap-2">
+         tes</h1>
+      10         <p className="text-zinc-600 dark:text-zinc-400">
+     … +11 lines (ctrl+o to expand)
+
+  Ran 1 shell command (ctrl+o to expand)
+
+
+>>> [VERIFY] `npm run lint` and `npm run build` (the type-check gate) both pass.
+
+⏺ Lint and build pass, and /review prerenders as static. Now I'll check it in
+  the running app.
+
+
+>>> [VERIFY] Rather than relying on tests alone, Claude starts the real app and
+>>> drives /review in a headless browser.
+
+⏺ Skill(run)
+  ⎿  Successfully loaded skill
+
+  Listed 1 directory, ran 1 shell command (ctrl+o to expand)
+
+⏺ No browser driver is installed, but Playwright's Chromium is cached, so I'll
+  set up the driver-only playwright-core in the scratchpad outside the project
+  and use it to run the dev server.
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+
+>>> [PERMISSIONS] The auto-mode safety classifier blocked a command that would
+>>> have killed whatever process was on port 3000, which could have been a
+>>> server I was running. Claude didn't retry it. It checked the port and
+>>> started the dev server without killing anything. The guardrails changed the
+>>> approach, not just the outcome.
+
+⏺ That was likely denied because of the kill on port 3000, which might stop a
+  server you're running. I'll check what's listening and start the server
+  without killing anything.
+
+  Made 1 scratchpad edit +54, searched for 1 pattern, ran 5 shell commands (ctrl+o to expand)
+
+
+>>> [VERIFY] 14 of 14 browser checks pass with no console errors. Claude then
+>>> opens the screenshots and looks at them itself.
+
+⏺ All 14 browser checks pass. Next I'll look at the screenshots, then commit.
+
+  Read 2 files (ctrl+o to expand)
+
+
+>>> [IMPLEMENT] Looking at the screenshots turned up a small usability issue
+>>> that no test would catch: disabled buttons looked active. It was fixed
+>>> before committing 7cfc9b4 feat(review): bullet comparison screen.
+
+⏺ Both screenshots look right. One small fix: an Accept button that's already
+  been used is disabled but looks the same as an active one, so I'll give
+  disabled buttons a faded style. Then I'll commit.
+
+⏺ Update(app/review/BulletComparison.tsx)
+  ⎿  Added 1 line, removed 1 line
+      18  };
+      19  
+      20  const buttonClass =
+      21 -  "rounded-md border border-zinc-300 px-3 py-1.5 text-sm font-m
+         -edium hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc
+         --800";                                                         
+      21 +  "rounded-md border border-zinc-300 px-3 py-1.5 text-sm font-m
+         +edium hover:bg-zinc-100 disabled:cursor-default disabled:opacit
+         +y-40 disabled:hover:bg-transparent dark:border-zinc-700 dark:ho
+         +ver:bg-zinc-800";                                              
+      22  
+      23  export function BulletComparison({
+      24    result,
+
+  Ran 1 shell command (ctrl+o to expand)
+
+
+>>> [CONTEXT] [COMMIT] CLAUDE.md's Status section is updated so the next session
+>>> (mine or Yanni's) starts from accurate context. The placeholder test is
+>>> removed. Then pull --rebase, push b090430..5d60ef0, and post progress
+>>> comments on #1 and #7.
+
+⏺ Step 5: remove the placeholder test and update CLAUDE.md's Status line, which
+  is now out of date.
+⏺ Update(CLAUDE.md)
+  ⎿  Added 1 line, removed 1 line
+       7  
+       8  ## Status
+       9  
+      10 -Fresh `create-next-app` scaffold: `app/page.tsx` and `app/layou
+         -t.tsx` are still template code. `@anthropic-ai/sdk`, `zod`, and
+         - `vitest` are installed; `vitest.config.ts` excludes `evals/`. 
+         -The only test is `lib/placeholder.test.ts` — delete it once rea
+         -l tests exist. `lib/pipeline/`, `lib/storage/`, and the `eval` 
+         -script don't exist yet.                                        
+      10 +`app/page.tsx` and `app/layout.tsx` are still template code. `@
+         +anthropic-ai/sdk`, `zod`, and `vitest` are installed; `vitest.c
+         +onfig.ts` excludes `evals/`. Built so far: the no-invention che
+         +ck (`lib/pipeline/validate.ts`) and the bullet comparison scree
+         +n (`app/review/`, with its reducer in `lib/review/`), which run
+         +s on fixture data and a provisional type in `lib/review/provisi
+         +onalRewrite.ts` until `lib/types.ts` (#1) lands. `lib/storage/`
+         +, `lib/types.ts`, and the `eval` script don't exist yet.       
+      11  
+      12  **Local only.** The app runs on `localhost` and must not be dep
+          loyed publicly: there is no real authentication, so a public de
+          ployment would let anyone spend the Anthropic API key.
+      13  
+
+⏺ Bash(cd "/Users/samuelcoe/Documents/AI Coding Course/tailorfit" && git rm -q
+      lib/placeholder.test.ts && npm test 2>&1 | grep -E "FAIL|Tests |Test
+      Files" && git add C…)
+  ⎿   Test Files  2 passed (2)
+           Tests  20 passed (20)
+     Current branch main is up to date.
+     … +2 lines (ctrl+o to expand)
+  ⎿  Deleted lib/placeholder.test.ts (+0 -8)
+  ⎿  (a git step in this command can move the working tree, so these may be
+     its changes, not edits) (ctrl+o to expand)
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ The comparison screen for #7 is built and pushed to main (b090430..5d60ef0).
+  The only piece left is connecting it to the rewriter's Server Action, which
+  has to wait for #1 and #6.
+
+  What it does (/review, running on sample data for a fictional person):
+  - Each original bullet sits next to its rewrite, with Accept and an inline
+    Edit, and a counter shows how many bullets are done.
+  - A flagged bullet has an amber border and says the original was kept, with
+    the reason (e.g. "Tableau" is not in the original bullet). Its button reads
+    "Accept original".
+  - The final version only appears once every bullet is accepted or edited.
+
+  How I checked it: all 20 unit tests pass, and lint and npm run build pass. I
+  also clicked through the page in a headless browser against the dev server: 14
+  of 14 checks passed with no console errors, and I looked at the screenshots.
+  That browser driver lives in the scratchpad
+  (/private/tmp/claude-501/-Users-samuelcoe-Documents-AI-Coding-Course-tailorfit
+  /a43f1cb7-f467-490e-aa78-5ae746f775db/scratchpad/driver/drive.mjs), so nothing
+  was added to package.json.
+
+  What the history shows for the assignment:
+  - Part 2: the plan saved as a commit
+    (docs/plans/2026-11-22-bullet-comparison.md), then the implementation
+    commits.
+  - Part 3: the review state logic (lib/review/bulletReview.ts) was built in
+    three red/green cycles, with one refactor commit.
+
+  Changes from the plan:
+  - I committed the provisional type and sample data before the test cycles,
+    because the tests import the type.
+  - Cycles 1 and 3 have no refactor commit, since there was nothing to clean up.
+
+  On GitHub:
+  - On #1, I listed the fields the screen needs, mainly flagReason, which says
+    why a bullet was flagged.
+  - On #7, I posted a progress checklist.
+  - I also deleted the placeholder test and updated the Status section of
+    CLAUDE.md.
+
+  Still open:
+  - Dev server: still running in the background on port 3000. Stop it when
+    you're done looking.
+  - Lockfile: package-lock.json is still out of sync with package.json. I didn't
+    touch it.
+  - For your reflection: the auto-mode classifier blocked one command because it
+    would have killed whatever was on port 3000. I switched to checking the
+    port first and then starting the server, which is a good example of the
+    permissions setup at work.
+
+✻ Crunched for 4m 59s · done 8:15 PM
+
+
+>>> [CONTEXT] A status check against the assignment. After this answer I ran
+>>> /export to create this file, then /compact to summarise the long session and
+>>> keep working in the same thread on the next task (annotating this log).
+>>> Neither command appears here because they ran after the export.
+
+❯ So now for the homework 4, what I have done and what I need to do now.        
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Here's where the assignment stands, part by part, based on the repo and this
+  session.
+
+  Done
+
+  Part 1: Setup (25%), mostly done
+  - /init output committed (517ffa2), then improved through an interview
+    (8c892fe). The interview transcript is saved in
+    docs/session-logs/01-claude-md-interview.txt.
+  - CLAUDE.md covers stack, architecture, conventions, testing, git rules and
+    do's/don'ts, and imports @AGENTS.md and @docs/PRD.md.
+  - .claude/settings.json has allow, ask and deny lists. For example, npm run 
+    eval and reading .env are denied.
+  - /clear appears at the start of session log 01.
+
+  Part 2: Explore → Plan → Implement → Commit (30%), done (#7)
+  - Explore: this session, reading the scaffold, the config and the Next 16
+    docs.
+  - Plan: plan mode with two decisions you made; the plan is committed
+    (232237b).
+  - Implement and commit: 0e0f1ff → 7cfc9b4 → 5d60ef0.
+
+  Part 3: TDD (30%), done
+  - 5 red → green cycles across two features, in 13 commits:
+    - no-invention check: 2 cycles, each with a refactor commit
+    - review reducer: 3 cycles, one with a refactor commit
+  - Every red step was run and seen to fail before the green commit.
+
+  Still to do
+
+  1. Save this session as log 02. Do it now, before it's cleared.
+  Type /export docs/session-logs/02-tdd-and-plan-mode.txt. This is your best
+  evidence for Parts 2 and 3. It shows:
+  - plan mode, and the questions you answered in it
+  - each red test failing before green
+  - the auto-mode classifier blocking the port-kill command (good material for
+    the permissions part)
+
+  2. Show /compact and --continue (a Part 1 requirement that isn't shown yet).
+  For example:
+  - run /compact at the end of this session, then export or screenshot it
+  - next time, start with claude --continue and capture that too
+
+  Then add a short "Context management" paragraph to the reflection: when you
+  use /clear (switching to a new task), /compact (a long session on the same
+  task), and --continue (picking up the next day).
+
+  3. Annotate the session logs (Part 4).
+  Add short notes at the key moments, such as [EXPLORE], [PLAN MODE], [RED: test
+  fails], [GREEN], [REFACTOR], [PERMISSION DENIED → safer approach], [CONTEXT: 
+  /clear]. I can add these to the exported log, since they only label what
+  happened.
+
+  4. Write the reflection (1–2 pages). It should answer:
+  - How did Explore → Plan → Implement → Commit compare with how you worked
+    before? Concrete moments from this session:
+    - plan mode surfaced the missing flagReason field before any code was
+      written
+    - the plan's order needed changing once real work started (the type before
+      the tests)
+  - Which context strategies worked best? CLAUDE.md and the PRD import meant you
+    never had to re-explain the project. Splitting the work into issues kept
+    each session focused.
+
+  This should be in your own words. I can draft an outline with the facts from
+  the logs, but you and Yanni should write the opinions.
+
+  5. Check with your instructor: is it one reflection per pair or one each?
+  Yanni has 13 commits and you have 17, so either way works.
+
+  Optional: Yanni's half. #1 needs to merge before #6 can be finished (the
+  retry/fallback logic and the Server Action) and before #7 can be connected.
+  The assignment doesn't require that, but the PRD's "every story works end to
+  end" does.
+
+  Shall I annotate log 02 once you've exported it, or draft the reflection
+  outline?
+
+✻ Churned for 23s · done 8:17 PM
