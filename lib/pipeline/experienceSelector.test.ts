@@ -38,6 +38,12 @@ function claudeReturns(response: unknown) {
   return vi.fn<CallClaude>(async () => JSON.stringify(response));
 }
 
+function claudeReturnsInOrder(...texts: string[]) {
+  const callClaude = vi.fn<CallClaude>();
+  texts.forEach((t) => callClaude.mockResolvedValueOnce(t));
+  return callClaude;
+}
+
 describe("selectExperiences — prompt", () => {
   it("sends the job description and every library item to Claude in one call", async () => {
     const callClaude = claudeReturns(validResponse);
@@ -90,5 +96,19 @@ describe("selectExperiences — valid response", () => {
 
     expect(callClaude).toHaveBeenCalledTimes(1);
     expect(outcome).toEqual({ ok: true, result: { selected: [] } });
+  });
+});
+
+describe("selectExperiences — invalid response", () => {
+  const valid = JSON.stringify(validResponse);
+
+  it("retries the whole call once when the response is not JSON, and uses the retry", async () => {
+    const callClaude = claudeReturnsInOrder("Sure! Here are my picks.", valid);
+
+    const outcome = await selectExperiences({ library, jobDescription }, callClaude);
+
+    expect(callClaude).toHaveBeenCalledTimes(2);
+    expect(callClaude.mock.calls[1]).toEqual(callClaude.mock.calls[0]);
+    expect(outcome).toEqual({ ok: true, result: validResponse });
   });
 });
