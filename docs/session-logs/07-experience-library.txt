@@ -1,0 +1,1571 @@
+▗ ▗   ▖ ▖  Claude Code v2.1.330
+           Opus 5.5 · Claude Enterprise
+ ▘▘   ▝▝   ~/tailorfit
+
+
+❯ /clear                                                                        
+
+❯ Read issue #2 with gh issue view 2. This is the Explore phase only, so don't  
+  write or change any code. Use Glob, Grep, and Read to understand what #2 will 
+  build on: lib/types.ts, lib/storage/, app/DemoSignIn.tsx, and the             
+  conventions in CLAUDE.md. Write what you learn to                             
+  docs/notes/02-experience-library-explore.md: relevant files, existing         
+  patterns to follow, open questions, and risks. Commit it as docs(library):    
+  add exploration notes for experience library (#2).                            
+
+⏺ Bash(gh issue view 2 && echo ---- && git ls-files && echo ---- && ls docs
+      docs/notes 2>/dev/null)
+  ⎿  Error: Exit code 1
+     title:  Experience library: add, edit, delete, and list experiences and 
+     projects
+     state:  OPEN
+     author: Yifeicarrots (yanni)
+     labels: part-2
+     comments:       0
+     assignees:      Yifeicarrots (yanni)
+     projects:       
+     milestone:      
+     issue-type:     
+     … +70 lines (ctrl+o to expand)
+
+⏺ Bash(for f in lib/types.ts lib/storage/storage.ts lib/storage/storage.test.ts
+      lib/storage/browserStore.ts lib/storage/browserStore.test.ts
+      app/DemoSignIn.tsx app/pag…)
+  ⎿  ===== lib/types.ts
+          1  import { z } from "zod";
+          2
+     … +646 lines (ctrl+o to expand)
+
+⏺ Bash(cat -n app/review/page.tsx lib/review/bulletReview.ts | head -120; sed -n
+      1,60p docs/plans/2026-11-22-bullet-comparison.md; grep -n "use
+      client\|useSyncExternal…)
+  ⎿       1  import { sampleRewrite } from "@/lib/review/sampleRewrite";
+          2  import { BulletComparison } from "./BulletComparison";
+          3
+     … +184 lines (ctrl+o to expand)
+
+⏺ Write(docs/notes/02-experience-library-explore.md)
+  ⎿  Wrote 66 lines to docs/notes/02-experience-library-explore.md
+       1 # #2 Experience library: exploration notes
+       2 
+       3 Explore phase only. No code was written or changed.
+       4 
+       5 ## What #2 asks for
+       6 
+       7 From `gh issue view 2` (story 1, depends on #1, which is closed)
+         :
+       8 
+       9 - Add an experience or project with its bullet points
+     … +57 lines (ctrl+o to expand)
+
+⏺ Bash(git add docs/notes/02-experience-library-explore.md && git commit -q -m
+      "docs(library): add exploration notes for experience library (#2)…)
+  ⎿  5c70ef5 docs(library): add exploration notes for experience library (#
+     2)
+
+⏺ I've written the exploration notes for #2 to
+  docs/notes/02-experience-library-explore.md and committed them as 5c70ef5 (not
+  pushed). No code was changed.
+
+  Risks for the Plan step:
+  - Infinite re-render: loadLibrary() returns a new array on every call. Passing
+    it straight to useSyncExternalStore will re-render forever. DemoSignIn
+    avoids this by reading only .length. The library screen needs a cached
+    snapshot or has to load the data once into state after mount.
+  - Silent data loss: loadLibrary returns [] if any single item fails the
+    schema. The screen would then show an empty library, and the next save would
+    overwrite everything. Checking every item against experienceSchema before
+    saving guards against this.
+  - Same-tab updates: DemoSignIn has its own private listener set for storage
+    changes. A separate library component wouldn't hear its same-tab writes, and
+    vice versa. That's fine while they're on different routes, but a shared one
+    in lib/storage/ would be cleaner.
+  - Pressure on the shared schema: a form will tempt changes to lib/types.ts,
+    such as friendlier error messages, end date after start date, or a required
+    organization. Those need your teammate's agreement first, or the extra rules
+    can stay in the form.
+
+  Patterns to follow:
+  - Client components call browserStore() and pass the result to
+    saveLibrary/loadLibrary.
+  - Add, edit, delete and form-to-Experience conversion go in a pure
+    lib/library/ module, built with strict TDD and tested with fakeStore().
+  - The route page stays a Server Component, with the form and list as "use 
+    client" leaves.
+
+  Open questions for you:
+  1. Should the library get its own /library route, or go on the home page?
+  2. Should signed-out users be blocked from it?
+  3. How should IDs be made? crypto.randomUUID() works, ideally passed in so
+     tests get stable IDs. Bullet IDs should stay the same when an item is
+     edited.
+  4. Should bullets be entered in one textarea or as a list of inputs that can
+     be added and removed?
+  5. How should dates work? A month picker plus a "current" checkbox would set
+     endDate: null.
+  6. What should happen to an empty organization field? An empty string fails
+     the schema, so the form has to turn it into "no value".
+  7. What should the error messages say, and where should they appear?
+  8. Should deleting an item ask for confirmation first?
+  9. Should items keep the order they were added, or be sorted by start date?
+
+✻ Cooked for 55s · done 9:48 PM
+
+※ recap: I'm exploring issue #2, the experience library screen, and I've committed the notes to `docs/notes/02-experience-library-explore.md`, unpushed. Next, answer the nine open questions in the notes so I can write the plan.
+
+❯ Answers: (1) its own /library route; (2) signed-out users see "Please sign in 
+  first" with a link home; (3) crypto.randomUUID() passed in, and bullet IDs    
+  stay stable on edit; (4) a list of bullet inputs with add and remove; (5) a   
+  month picker plus a "Current" checkbox that sets endDate to null; (6) empty   
+  organization becomes no value; (7) plain-language errors under each field;    
+  (8) confirm before delete using the browser's confirm dialog; (9) sorted by   
+  start date, newest first, current items on top.                               
+                                                                                
+  Risks: load the library once into state after mount. For data loss, if stored 
+  data fails validation, copy the raw text to a backup key before any save can  
+  overwrite it, and show a warning; that's a TDD cycle in lib/storage/. Skip    
+  the shared listener and note it as a known limitation. Keep extra form rules  
+  out of lib/types.ts.                                                          
+                                                                                
+  Add these as a Decisions section in the explore notes, commit the notes, then 
+  let's move to Plan mode.                                                      
+
+⏺ Update(docs/notes/02-experience-library-explore.md)
+  ⎿  Added 23 lines
+      42  - **Fixtures**: fictional people and employers only (e.g. "Mapl
+          ewood Robotics", "Avery Quinn").
+      43  - **Commits**: scope `library`, Conventional Commits, `git pull
+           --rebase` before pushing.
+      44 
+      45 +## Decisions                                                   
+      46 +                                                               
+      47 +Answers to the open questions and risks below, decided by Yanni
+         + on 2026-11-22.                                                
+      48 +                                                               
+      49 +### Open questions                                             
+      50 +                                                               
+      51 +1. **Route**: the library gets its own `/library` route.       
+      52 +2. **Sign-in gate**: signed-out users see "Please sign in first
+         +" with a link to the home page.                                
+      53 +3. **IDs**: `crypto.randomUUID()`, passed into `lib/` code as a
+         +n argument so tests can use stable IDs. Existing bullet IDs sta
+         +y the same when an item is edited.                             
+      54 +4. **Bullets**: a list of bullet inputs with add and remove but
+         +tons (not one textarea).                                       
+      55 +5. **Dates**: a month picker (`<input type="month">`) plus a "C
+         +urrent" checkbox that sets `endDate` to `null`.                
+      56 +6. **Empty organization**: becomes no value (`undefined`), not 
+         +`""`.                                                          
+      57 +7. **Errors**: plain-language messages under each field. The wo
+         +rding lives in the form layer, not in `lib/types.ts`.          
+      58 +8. **Delete**: confirm first with the browser's `confirm()` dia
+         +log.                                                           
+      59 +9. **Order**: sorted by start date, newest first, with current 
+         +items (`endDate: null`) on top.                                
+      60 +                                                               
+      61 +### Risks                                                      
+      62 +                                                               
+      63 +- **Re-render loop**: load the library into state once after mo
+         +unt, rather than using `loadLibrary` as a `useSyncExternalStore
+         +` snapshot.                                                    
+      64 +- **Silent data loss**: if stored library data fails validation
+         +, copy the raw text to a backup key before any save can overwri
+         +te it, and show the user a warning. This is a TDD cycle in `lib
+         +/storage/`.                                                    
+      65 +- **Same-tab updates between components**: skip the shared list
+         +ener. Known limitation: `DemoSignIn`'s library count and the li
+         +brary screen don't notify each other within one tab. That's acc
+         +eptable while they're on different routes.                     
+      66 +- **Shared schema**: extra form rules (friendlier messages, end
+         + ≥ start, etc.) stay out of `lib/types.ts`.                    
+      67 +                                                               
+      68  ## Open questions
+      69 
+      70  1. **Where does the library live?** A new route (e.g. `/library
+          `) linked from the signed-in home screen, or on the home page i
+          tself? A route keeps `DemoSignIn` small.
+
+⏺ Bash(git add docs/notes/02-experience-library-explore.md && git commit -q -m
+      "docs(library): record decisions in experience library exploration notes
+      (#2)…)
+  ⎿  50138d2 docs(library): record decisions in experience library explorat
+     ion notes (#2)
+
+⏺ Entered plan mode
+  Claude is exploring and planning an approach.
+
+⏺ Bash(sed -n 1,40p app/review/BulletComparison.tsx; ls
+      node_modules/next/dist/docs/01-app/01-getting-started/; grep -n
+      "confirm\|eslint" eslint.config.mjs | head)
+  ⎿  "use client";
+
+     import { useReducer, useState } from "react";
+     … +63 lines (ctrl+o to expand)
+
+⏺ Updated plan
+  ⎿  /plan to preview
+
+⏺ I added a Decisions section to the explore notes and committed it as 50138d2.
+  The plan for #2 is now written and ready for you to review.
+
+⏺ Approved Claude's plan
+  ⎿  Plan saved to: ~/.claude/plans/lexical-mapping-puzzle.md · /plan to edit
+     Plan: #2 Experience library
+
+     Context
+
+     Issue #2 (story 1): users enter each experience and project once, then add,
+     edit, delete, and list them on their own screen. Items are saved through
+     lib/storage/, so they survive a reload. Input is checked with
+     experienceSchema, and errors appear under each field. The Explore notes and
+     decisions are in docs/notes/02-experience-library-explore.md (commits
+     5c70ef5, 50138d2).
+
+     Decisions (from you): /library route; signed-out users see "Please sign in
+     first" with a link home; crypto.randomUUID() passed in, and bullet IDs stay
+     stable on edit; a list of bullet inputs with add and remove; a month
+     picker plus a "Current" checkbox (sets endDate: null); an empty
+     organization becomes undefined; plain-language errors under each field;
+     confirm() before delete; sorted current first, then start date newest
+     first; load the library into state once after mount; back up invalid stored
+     data before any save can overwrite it, and warn the user; no shared
+     listener (known limitation); lib/types.ts unchanged.
+
+     Design
+
+     1. Storage backup: lib/storage/storage.ts (TDD)
+
+     New export, with loadLibrary left as it is (DemoSignIn calls it inside a
+     useSyncExternalStore snapshot, so it must stay free of side effects):
+     export function loadLibraryWithBackup(store: KeyValueStore):
+       { library: ExperienceLibrary; backedUp: boolean }
+     - Missing key → { library: [], backedUp: false }
+     - Valid data → { library, backedUp: false }, with no write to the backup
+       key
+     - Corrupt JSON or schema-invalid data → copy the raw string to
+       tailorfit:library:backup, then return { library: [], backedUp: true }.
+       The backup is written on load, so it exists before any save.
+     - Reuse the parse logic from the private readJson helper, refactoring it to
+       tell "missing" apart from "invalid" if needed.
+
+     2. Library edits: lib/library/libraryEdits.ts (TDD, pure)
+
+     - addItem(library, item), updateItem(library, item) (replaces by id;
+       library unchanged if the id is unknown), deleteItem(library, id)
+     - sortLibrary(library): returns a new array with current items (endDate ===
+       null) first, then startDate descending. Sorting is stable for ties. Used
+       for display; the stored order doesn't matter.
+
+     3. Form conversion: lib/library/experienceForm.ts (TDD, pure)
+
+     type ExperienceFormValues = {
+       id: string; type: "experience" | "project"; title: string; organization:
+     string;
+       startDate: string; endDate: string; current: boolean;
+       bullets: { id: string; text: string }[];
+     };
+     type FormField = "title" | "organization" | "startDate" | "endDate" |
+     "bullets";
+     type FormErrors = Partial<Record<FormField, string>>;
+     - emptyForm(newId): new item id and one empty bullet row, each with its own
+       newId().
+     - formFromExperience(experience): keeps the item and bullet IDs (so edits
+       keep IDs stable). current = endDate === null; organization ?? "".
+     - addBulletRow(values, newId) / removeBulletRow(values, bulletId): removing
+       never leaves zero rows.
+     - experienceFromForm(values) → { ok: true; experience } | { ok: false; 
+       errors }:
+       - Trims text; organization "" → undefined; current → endDate: null; drops
+         blank bullet rows.
+       - Form-only rules: end date required unless Current; end date not before
+         start date.
+       - Then runs experienceSchema.safeParse. Each issue's path[0] maps to a
+         field with a plain-language message, e.g. "Add a title.", "Pick a start
+         month.", "Pick an end month, or tick Current.", "End month can't be
+         before the start month.", "Add at least one bullet point."
+
+     4. UI: app/library/ (no TDD)
+
+     - page.tsx: Server Component shell (<main>, heading, short intro, link
+       home) rendering <LibraryScreen />.
+     - LibraryScreen.tsx ("use client"):
+       - Uses useSyncExternalStore to read the user name, with undefined as the
+         server snapshot → "Loading…". This is the same pattern as DemoSignIn
+         and avoids hydration mismatches.
+       - null → "Please sign in first" with <Link href="/">.
+       - Signed in → renders <LibraryEditor />. That component is only mounted
+         on the client, so its lazy useState(() => 
+         loadLibraryWithBackup(browserStore())) loads the library exactly once
+         after mount, with no setState in an effect.
+     - LibraryEditor.tsx ("use client"):
+       - Shows an amber warning if backedUp.
+       - Lists sortLibrary(library) as cards: type badge, title, organization,
+         date range ("2025-06 – Present"), and bullets. Each card has Edit and
+         Delete buttons.
+       - Add button. Only one form is open at a time (add, or editing one item).
+       - On save: addItem/updateItem → saveLibrary(browserStore(), next) →
+         setLibrary(next).
+       - Delete: window.confirm("Delete “<title>”? This can't be undone.") →
+         deleteItem → save.
+       - Passes newId = () => crypto.randomUUID() down.
+     - ExperienceForm.tsx ("use client"):
+       - Fields: Experience/Project selector, title, organization, start month
+         (type="month"), end month (disabled when Current is ticked) plus a
+         Current checkbox, and bullet inputs with Remove and an "Add bullet"
+         button.
+       - Save and Cancel buttons. Error text (text-red-600) appears under each
+         field, with aria-describedby.
+     - app/DemoSignIn.tsx: add a "Manage your library" <Link href="/library"> to
+       the signed-in view.
+     - Styling follows the zinc/Tailwind classes in DemoSignIn.tsx and
+       BulletComparison.tsx.
+
+     Known limitation: no shared listener. DemoSignIn's library count and the
+     library screen don't notify each other within one tab. Since they're on
+     different routes, the count is up to date after navigating back.
+
+     Out of scope: changes to lib/types.ts, restoring from the backup, and
+     reordering items by hand.
+
+     Steps and commits
+
+     1. Copy this plan to docs/plans/2026-11-22-experience-library.md →
+        docs(library): plan experience library (#2).
+     2. Storage backup TDD, with separate test(storage): [red] … /
+        feat(storage): [green] … commits:
+        (a) valid and missing data → backedUp: false, no backup written; (b)
+        schema-invalid data → backed up; (c) corrupt JSON → backed up. Then a
+        refactor commit if needed.
+     3. libraryEdits TDD (scope library): add/update/delete cycle, then
+        sortLibrary cycle.
+     4. experienceForm TDD (scope library): emptyForm/formFromExperience/bullet
+        rows; valid conversion (trim, org → undefined, current → null, blank
+        bullets dropped); each error rule.
+     5. feat(library): experience library screen with add, edit, and delete.
+        This includes the DemoSignIn link.
+     6. Run git pull --rebase, push, and post a progress comment on #2
+        (checklist status and the known limitation).
+
+     Tests use fakeStore() (copied from lib/storage/storage.test.ts), a
+     counter-based fake newId, and fictional data only.
+
+     Verification
+
+     - npm test: all new and existing tests green.
+     - npm run lint and npm run build (type-check gate).
+     - npm run dev → http://localhost:3000:
+       - Signed out, /library shows "Please sign in first" with a working link.
+       - Sign in → "Manage your library" → add an experience (with organization)
+         and a project (no organization, Current ticked).
+       - Reload: both are still there, sorted with the current item first.
+       - Edit an item's bullets: bullet IDs are unchanged in DevTools → Local
+         Storage.
+       - Submitting an empty title, a missing start month, an end before the
+         start, and no bullets each shows its message under the field.
+       - Delete: Cancel in confirm() keeps the item; OK removes it.
+       - Set tailorfit:library to {bad in DevTools and reload: the warning shows
+         and tailorfit:library:backup holds {bad.
+
+⏺ The plan is approved, so I'm starting on step 1: committing the plan to
+  docs/plans/.
+
+⏺ Bash(cp /Users/stephcarrots/.claude/plans/lexical-mapping-puzzle.md
+      docs/plans/2026-11-22-experience-library.md && git add
+      docs/plans/2026-11-22-experience-library.m…)
+  ⎿  b4aeb14 docs(library): plan experience library (#2)
+  ⎿  Created docs/plans/2026-11-22-experience-library.md +87
+       1 +# Plan: #2 Experience library                                  
+       2 +                                                               
+       3 +## Context                                                     
+       4 +Issue #2 (story 1): users enter each experience and project onc
+         +e, then add, edit, delete, and list them on their own screen. I
+         +tems are saved through `lib/storage/`, so they survive a reload
+         +. Input is checked with `experienceSchema`, and errors appear u
+         +nder each field. The Explore notes and decisions are in `docs/n
+         +otes/02-experience-library-explore.md` (commits `5c70ef5`, `501
+         +38d2`).                                                        
+       5 +                                                               
+       6 +**Decisions (from you):** `/library` route; signed-out users se
+         +e "Please sign in first" with a link home; `crypto.randomUUID()
+         +` passed in, and bullet IDs stay stable on edit; a list of bull
+         +et inputs with add and remove; a month picker plus a "Current" 
+         +checkbox (sets `endDate: null`); an empty organization becomes 
+         +`undefined`; plain-language errors under each field; `confirm()
+         +` before delete; sorted current first, then start date newest f
+         +irst; load the library into state once after mount; back up inv
+         +alid stored data before any save can overwrite it, and warn the
+         + user; no shared listener (known limitation); `lib/types.ts` un
+         +changed.                                                       
+       7 +                                                               
+       8 +## Design                                                      
+       9 +                                                               
+      10 +### 1. Storage backup: `lib/storage/storage.ts` (TDD)          
+      11 +New export, with `loadLibrary` left as it is (DemoSignIn calls 
+         +it inside a `useSyncExternalStore` snapshot, so it must stay fr
+         +ee of side effects):                                           
+      12 +```ts                                                          
+      13 +export function loadLibraryWithBackup(store: KeyValueStore):   
+      14 +  { library: ExperienceLibrary; backedUp: boolean }            
+      15 +```                                                            
+      16 +- Missing key → `{ library: [], backedUp: false }`             
+      17 +- Valid data → `{ library, backedUp: false }`, with no write to
+         + the backup key                                                
+      18 +- Corrupt JSON **or** schema-invalid data → copy the raw string
+         + to `tailorfit:library:backup`, then return `{ library: [], bac
+         +kedUp: true }`. The backup is written on load, so it exists bef
+         +ore any save.                                                  
+      19 +- Reuse the parse logic from the private `readJson` helper, ref
+         +actoring it to tell "missing" apart from "invalid" if needed.  
+      20 +                                                               
+      21 +### 2. Library edits: `lib/library/libraryEdits.ts` (TDD, pure)
+      22 +- `addItem(library, item)`, `updateItem(library, item)` (replac
+         +es by `id`; library unchanged if the id is unknown), `deleteIte
+         +m(library, id)`                                                
+      23 +- `sortLibrary(library)`: returns a new array with current item
+         +s (`endDate === null`) first, then `startDate` descending. Sort
+         +ing is stable for ties. Used for display; the stored order does
+         +n't matter.                                                    
+      24 +                                                               
+      25 +### 3. Form conversion: `lib/library/experienceForm.ts` (TDD, p
+         +ure)                                                           
+      26 +```ts                                                          
+      27 +type ExperienceFormValues = {                                  
+      28 +  id: string; type: "experience" | "project"; title: string; or
+         +ganization: string;                                            
+      29 +  startDate: string; endDate: string; current: boolean;        
+      30 +  bullets: { id: string; text: string }[];                     
+      31 +};                                                             
+      32 +type FormField = "title" | "organization" | "startDate" | "endD
+         +ate" | "bullets";                                              
+      33 +type FormErrors = Partial<Record<FormField, string>>;          
+      34 +```                                                            
+      35 +- `emptyForm(newId)`: new item id and one empty bullet row, eac
+         +h with its own `newId()`.                                      
+      36 +- `formFromExperience(experience)`: keeps the item and bullet I
+         +Ds (so edits keep IDs stable). `current = endDate === null`; `o
+         +rganization ?? ""`.                                            
+      37 +- `addBulletRow(values, newId)` / `removeBulletRow(values, bull
+         +etId)`: removing never leaves zero rows.                       
+      38 +- `experienceFromForm(values)` → `{ ok: true; experience } | { 
+         +ok: false; errors }`:                                          
+      39 +  - Trims text; `organization` "" → `undefined`; `current` → `e
+         +ndDate: null`; drops blank bullet rows.                        
+      40 +  - Form-only rules: end date required unless Current; end date
+         + not before start date.                                        
+     … +47 lines (ctrl+o to expand)
+
+⏺ Step 2a, red: valid and missing data are not backed up.
+⏺ Update(lib/storage/storage.test.ts)
+  ⎿  Added 1 line
+      2  import {
+      3    clearUserName,
+      4    loadLibrary,
+      5 +  loadLibraryWithBackup,                                        
+      6    loadUserName,
+      7    saveLibrary,
+      8    saveUserName,
+
+⏺ Update(lib/storage/storage.test.ts)
+  ⎿  Added 15 lines
+      73    });
+      74  });
+      75 
+      76 +describe("loading the library with a backup of invalid data", (
+         +) => {                                                         
+      77 +  it("returns an empty library and no backup when nothing is st
+         +ored", () => {                                                 
+      78 +    const store = fakeStore();                                 
+      79 +    expect(loadLibraryWithBackup(store)).toEqual({ library: [],
+         + backedUp: false });                                           
+      80 +    expect(store.data.has("tailorfit:library:backup")).toBe(fal
+         +se);                                                           
+      81 +  });                                                          
+      82 +                                                               
+      83 +  it("returns a valid library without writing a backup", () => 
+         +{                                                              
+      84 +    const store = fakeStore();                                 
+      85 +    saveLibrary(store, library);                               
+      86 +    expect(loadLibraryWithBackup(store)).toEqual({ library, bac
+         +kedUp: false });                                               
+      87 +    expect(store.data.has("tailorfit:library:backup")).toBe(fal
+         +se);                                                           
+      88 +  });                                                          
+      89 +});                                                            
+      90 +                                                               
+      91  describe("demo user name storage", () => {
+      92    it("returns null when no name is stored", () => {
+      93      expect(loadUserName(fakeStore())).toBeNull();
+
+⏺ Bash(npx vitest run lib/storage 2>&1 | tail -15)
+  ⎿       84|     const store = fakeStore();
+          85|     saveLibrary(store, library);
+          86|     expect(loadLibraryWithBackup(store)).toEqual({ library, b
+     … +14 lines (ctrl+o to expand)
+
+⏺ Bash(git add lib/storage/storage.test.ts && git commit -q -m "test(storage):
+      [red] load library with backup returns valid or empty data without a
+      backup…)
+  ⎿  9392b70 test(storage): [red] load library with backup returns valid or
+      empty data without a backup
+
+⏺ Green: minimal implementation.
+
+⏺ Update(lib/storage/storage.ts)
+  ⎿  Added 7 lines
+      36    return readJson(store, LIBRARY_KEY, experienceLibrarySchema,
+          []);
+      37  }
+      38 
+      39 +export function loadLibraryWithBackup(store: KeyValueStore): { 
+      40 +  library: ExperienceLibrary;                                  
+      41 +  backedUp: boolean;                                           
+      42 +} {                                                            
+      43 +  return { library: loadLibrary(store), backedUp: false };     
+      44 +}                                                              
+      45 +                                                               
+      46  export function saveUserName(store: KeyValueStore, name: string
+          ): void {
+      47    store.setItem(USER_NAME_KEY, JSON.stringify(name));
+      48  }
+
+⏺ Bash(npx vitest run lib/storage 2>&1 | tail -5 && git add
+      lib/storage/storage.ts && git commit -q -m "feat(storage): [green] load
+      library with backup returns valid o…)
+  ⎿   Test Files  2 passed (2)
+           Tests  11 passed (11)
+        Start at  21:00:18
+     … +5 lines (ctrl+o to expand)
+
+⏺ Step 2b, red: data that fails the schema gets backed up.
+
+⏺ Update(lib/storage/storage.test.ts)
+  ⎿  Added 8 lines
+      86      expect(loadLibraryWithBackup(store)).toEqual({ library, bac
+          kedUp: false });
+      87      expect(store.data.has("tailorfit:library:backup")).toBe(fal
+          se);
+      88    });
+      89 +                                                               
+      90 +  it("copies data that fails the schema to the backup key and r
+         +eports it", () => {                                            
+      91 +    const store = fakeStore();                                 
+      92 +    const raw = JSON.stringify([{ ...library[0], bullets: [] }]
+         +);                                                             
+      93 +    store.data.set("tailorfit:library", raw);                  
+      94 +    expect(loadLibraryWithBackup(store)).toEqual({ library: [],
+         + backedUp: true });                                            
+      95 +    expect(store.data.get("tailorfit:library:backup")).toBe(raw
+         +);                                                             
+      96 +  });                                                          
+      97  });
+      98 
+      99  describe("demo user name storage", () => {
+
+⏺ Bash(npx vitest run lib/storage 2>&1 | grep -E "Tests|✗|×|FAIL" | head; git
+      add lib/storage/storage.test.ts && git commit -q -m "test(storage): [red]
+      back up library…)
+  ⎿       × copies data that fails the schema to the backup key and reports
+      it 3ms
+     ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+     … +6 lines (ctrl+o to expand)
+
+⏺ Update(lib/storage/storage.ts)
+  ⎿  Added 6 lines, removed 1 line
+      40    library: ExperienceLibrary;
+      41    backedUp: boolean;
+      42  } {
+      43 -  return { library: loadLibrary(store), backedUp: false };     
+      43 +  const raw = store.getItem(LIBRARY_KEY);                      
+      44 +  if (raw === null) return { library: [], backedUp: false };   
+      45 +  const result = experienceLibrarySchema.safeParse(JSON.parse(r
+         +aw));                                                          
+      46 +  if (result.success) return { library: result.data, backedUp: 
+         +false };                                                       
+      47 +  store.setItem(LIBRARY_BACKUP_KEY, raw);                      
+      48 +  return { library: [], backedUp: true };                      
+      49  }
+      50 
+      51  export function saveUserName(store: KeyValueStore, name: string
+          ): void {
+
+⏺ Update(lib/storage/storage.ts)
+  ⎿  Added 1 line
+       4  export type KeyValueStore = Pick<Storage, "getItem" | "setItem"
+           | "removeItem">;
+       5 
+       6  const LIBRARY_KEY = "tailorfit:library";
+       7 +const LIBRARY_BACKUP_KEY = "tailorfit:library:backup";         
+       8  const USER_NAME_KEY = "tailorfit:userName";
+       9 
+      10  const userNameSchema = z.string().min(1);
+
+⏺ Bash(npx vitest run lib/storage 2>&1 | grep -E "Tests " ; git add
+      lib/storage/storage.ts && git commit -q -m "feat(storage): [green] back up
+      library data that fails…)
+  ⎿        Tests  12 passed (12)
+     5540edc feat(storage): [green] back up library data that fails the sch
+     ema
+
+⏺ Step 2c, red: corrupt JSON gets backed up too.
+
+⏺ Update(lib/storage/storage.test.ts)
+  ⎿  Added 7 lines
+       94      expect(loadLibraryWithBackup(store)).toEqual({ library: []
+           , backedUp: true });
+       95      expect(store.data.get("tailorfit:library:backup")).toBe(ra
+           w);
+       96    });
+       97 +                                                              
+       98 +  it("copies corrupted JSON to the backup key instead of throw
+          +ing", () => {                                                 
+       99 +    const store = fakeStore();                                
+      100 +    store.data.set("tailorfit:library", "{not valid json");   
+      101 +    expect(loadLibraryWithBackup(store)).toEqual({ library: []
+          +, backedUp: true });                                          
+      102 +    expect(store.data.get("tailorfit:library:backup")).toBe("{
+          +not valid json");                                             
+      103 +  });                                                         
+      104  });
+      105 
+      106  describe("demo user name storage", () => {
+
+⏺ Bash(npx vitest run lib/storage 2>&1 | grep -E "Tests |×" ; git add
+      lib/storage/storage.test.ts && git commit -q -m "test(storage): [red] back
+      up corrupted library J…)
+  ⎿       × copies corrupted JSON to the backup key instead of throwing 2ms
+     ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+           Tests  1 failed | 12 passed (13)
+     5ce1f2a test(storage): [red] back up corrupted library JSON
+
+⏺ Update(lib/storage/storage.ts)
+  ⎿  Added 7 lines, removed 1 line
+      43  } {
+      44    const raw = store.getItem(LIBRARY_KEY);
+      45    if (raw === null) return { library: [], backedUp: false };
+      46 -  const result = experienceLibrarySchema.safeParse(JSON.parse(r
+         -aw));                                                          
+      46 +  let parsed: unknown;                                         
+      47 +  try {                                                        
+      48 +    parsed = JSON.parse(raw);                                  
+      49 +  } catch {                                                    
+      50 +    parsed = undefined;                                        
+      51 +  }                                                            
+      52 +  const result = experienceLibrarySchema.safeParse(parsed);    
+      53    if (result.success) return { library: result.data, backedUp:
+          false };
+      54    store.setItem(LIBRARY_BACKUP_KEY, raw);
+      55    return { library: [], backedUp: true };
+
+⏺ Bash(npx vitest run lib/storage 2>&1 | grep -E "Tests |×" ; git add
+      lib/storage/storage.ts && git commit -q -m "feat(storage): [green] back up
+      corrupted library JSON…)
+  ⎿        Tests  13 passed (13)
+     0ec2825 feat(storage): [green] back up corrupted library JSON
+
+⏺ Refactor: readJson and the new function both parse and validate the same way,
+  so I'll move that into one shared helper.
+
+  Read 1 file (ctrl+o to expand)
+
+⏺ Update(lib/storage/storage.ts)
+  ⎿  Added 19 lines, removed 10 lines
+       9 
+      10  const userNameSchema = z.string().min(1);
+      11 
+      12 -// Reads a JSON value and validates it; missing, corrupted, or 
+         -invalid data                                                   
+      13 -// returns the fallback instead of throwing.                   
+      12 +// Parses and validates a stored string; corrupted or invalid d
+         +ata returns                                                    
+      13 +// { ok: false } instead of throwing.                          
+      14 +function parseJson<T>(                                         
+      15 +  raw: string,                                                 
+      16 +  schema: z.ZodType<T>,                                        
+      17 +): { ok: true; value: T } | { ok: false } {                    
+      18 +  let parsed: unknown;                                         
+      19 +  try {                                                        
+      20 +    parsed = JSON.parse(raw);                                  
+      21 +  } catch {                                                    
+      22 +    return { ok: false };                                      
+      23 +  }                                                            
+      24 +  const result = schema.safeParse(parsed);                     
+      25 +  return result.success ? { ok: true, value: result.data } : { 
+         +ok: false };                                                   
+      26 +}                                                              
+      27 +                                                               
+      28 +// Missing, corrupted, or invalid data returns the fallback.   
+      29  function readJson<T>(
+      30    store: KeyValueStore,
+      31    key: string,
+     ...
+      34  ): T {
+      35    const raw = store.getItem(key);
+      36    if (raw === null) return fallback;
+      22 -  let parsed: unknown;                                         
+      23 -  try {                                                        
+      24 -    parsed = JSON.parse(raw);                                  
+      25 -  } catch {                                                    
+      26 -    return fallback;                                           
+      27 -  }                                                            
+      28 -  const result = schema.safeParse(parsed);                     
+      29 -  return result.success ? result.data : fallback;              
+      37 +  const result = parseJson(raw, schema);                       
+      38 +  return result.ok ? result.value : fallback;                  
+      39  }
+      40 
+      41  export function saveLibrary(store: KeyValueStore, library: Expe
+          rienceLibrary): void {
+
+⏺ Update(lib/storage/storage.ts)
+  ⎿  Added 3 lines, removed 8 lines
+      52  } {
+      53    const raw = store.getItem(LIBRARY_KEY);
+      54    if (raw === null) return { library: [], backedUp: false };
+      55 -  let parsed: unknown;                                         
+      56 -  try {                                                        
+      57 -    parsed = JSON.parse(raw);                                  
+      58 -  } catch {                                                    
+      59 -    parsed = undefined;                                        
+      60 -  }                                                            
+      61 -  const result = experienceLibrarySchema.safeParse(parsed);    
+      62 -  if (result.success) return { library: result.data, backedUp: 
+         -false };                                                       
+      55 +  const result = parseJson(raw, experienceLibrarySchema);      
+      56 +  if (result.ok) return { library: result.value, backedUp: fals
+         +e };                                                           
+      57 +  // Keep the unreadable data so the next save can't destroy it
+         +.                                                              
+      58    store.setItem(LIBRARY_BACKUP_KEY, raw);
+      59    return { library: [], backedUp: true };
+      60  }
+
+⏺ Bash(npx vitest run lib/storage 2>&1 | grep -E "Tests |×" ; git add
+      lib/storage/storage.ts && git commit -q -m "refactor(storage): share JSON
+      parse-and-validate help…)  ⎿        Tests  13 passed (13)
+     53b99c9 refactor(storage): share JSON parse-and-validate helper betwee
+     n loaders
+
+⏺ Step 3: TDD for libraryEdits. First the red tests for add, update and delete.
+
+⏺ Write(lib/library/libraryEdits.test.ts)
+  ⎿  Wrote 45 lines to lib/library/libraryEdits.test.ts
+       1 import { describe, expect, it } from "vitest";
+       2 import { addItem, deleteItem, updateItem } from "@/lib/library/l
+         ibraryEdits";
+       3 import type { Experience, ExperienceLibrary } from "@/lib/types"
+         ;
+       4 
+       5 // Fictional person.
+       6 function item(id: string, overrides: Partial<Experience> = {}):
+         Experience {
+       7   return {
+     … +38 lines (ctrl+o to expand)
+
+⏺ Bash(npx vitest run lib/library 2>&1 | grep -E "Tests |Error|FAIL" | head -3;
+      git add lib/library/libraryEdits.test.ts && git commit -q -m
+      "test(library): [red] add,…)
+  ⎿   FAIL  lib/library/libraryEdits.test.ts [ lib/library/libraryEdits.tes
+     t.ts ]
+     Error: Cannot find package '@/lib/library/libraryEdits' imported from
+     … +3 lines (ctrl+o to expand)
+
+⏺ Write(lib/library/libraryEdits.ts)
+  ⎿  Wrote 13 lines to lib/library/libraryEdits.ts
+      1 import type { Experience, ExperienceLibrary } from "@/lib/types";
+      2 
+      3 export function addItem(library: ExperienceLibrary, item: Experie
+        nce): ExperienceLibrary {
+      4   return [...library, item];
+      5 }
+      6 
+      7 export function updateItem(library: ExperienceLibrary, item: Expe
+        rience): ExperienceLibrary {
+      8   return library.map((existing) => (existing.id === item.id ? ite
+     … +6 lines (ctrl+o to expand)
+
+⏺ Bash(npx vitest run lib/library 2>&1 | grep -E "Tests |×"; git add
+      lib/library/libraryEdits.ts && git commit -q -m "feat(library): [green]
+      add, update, and delete li…)
+  ⎿        Tests  4 passed (4)
+     39ab79b feat(library): [green] add, update, and delete library items
+
+⏺ Next, sortLibrary, starting with the red test.
+
+⏺ Update(lib/library/libraryEdits.test.ts)
+  ⎿  Added 6 lines, removed 1 line
+       1  import { describe, expect, it } from "vitest";
+       2 -import { addItem, deleteItem, updateItem } from "@/lib/library/
+         -libraryEdits";                                                 
+       2 +import {                                                       
+       3 +  addItem,                                                     
+       4 +  deleteItem,                                                  
+       5 +  sortLibrary,                                                 
+       6 +  updateItem,                                                  
+       7 +} from "@/lib/library/libraryEdits";                           
+       8  import type { Experience, ExperienceLibrary } from "@/lib/types
+          ";
+       9 
+      10  // Fictional person.
+
+⏺ Bash(cat >> lib/library/libraryEdits.test.ts <<'EOF'…)
+  ⎿       × puts current items first, then sorts by start date, newest firs
+     t 1ms
+          × keeps the saved order for ties and doesn't change the input 0ms
+     … +4 lines (ctrl+o to expand)
+  ⎿  Updated lib/library/libraryEdits.test.ts +24
+      48      expect(deleteItem([item("a"), item("b")], "a")).toEqual([it
+          em("b")]);
+      49    });
+      50  });
+      51 +                                                               
+      52 +describe("sortLibrary", () => {                                
+      53 +  it("puts current items first, then sorts by start date, newes
+         +t first", () => {                                              
+      54 +    const old = item("old", { startDate: "2022-01", endDate: "2
+         +022-05" });                                                    
+      55 +    const recent = item("recent", { startDate: "2025-06", endDa
+         +te: "2025-08" });                                              
+      56 +    const currentOld = item("currentOld", { startDate: "2021-09
+         +", endDate: null });                                           
+      57 +    const currentNew = item("currentNew", { startDate: "2024-01
+         +", endDate: null });                                           
+      58 +    const sorted = sortLibrary([old, currentOld, recent, curren
+         +tNew]);                                                        
+      59 +    expect(sorted.map((i) => i.id)).toEqual([                  
+      60 +      "currentNew",                                            
+      61 +      "currentOld",                                            
+      62 +      "recent",                                                
+      63 +      "old",                                                   
+      64 +    ]);                                                        
+      65 +  });                                                          
+      66 +                                                               
+      67 +  it("keeps the saved order for ties and doesn't change the inp
+         +ut", () => {                                                   
+      68 +    const first = item("first");                               
+      69 +    const second = item("second");                             
+      70 +    const library = [first, second];                           
+      71 +    expect(sortLibrary(library).map((i) => i.id)).toEqual(["fir
+         +st", "second"]);                                               
+      72 +    expect(sortLibrary(library)).not.toBe(library);            
+      73 +  });                                                          
+      74 +});                                                            
+
+⏺ Bash(cat >> lib/library/libraryEdits.ts <<'EOF'…)
+  ⎿        Tests  6 passed (6)
+  ⎿  Updated lib/library/libraryEdits.ts +11
+      11  export function deleteItem(library: ExperienceLibrary, id: stri
+          ng): ExperienceLibrary {
+      12    return library.filter((existing) => existing.id !== id);
+      13  }
+      14 +                                                               
+      15 +// Current items (endDate null) first, then newest start date f
+         +irst.                                                          
+      16 +// Array.prototype.toSorted is stable, so ties keep their saved
+         + order.                                                        
+      17 +export function sortLibrary(library: ExperienceLibrary): Experi
+         +enceLibrary {                                                  
+      18 +  return library.toSorted((a, b) => {                          
+      19 +    const aCurrent = a.endDate === null ? 1 : 0;               
+      20 +    const bCurrent = b.endDate === null ? 1 : 0;               
+      21 +    if (aCurrent !== bCurrent) return bCurrent - aCurrent;     
+      22 +    return b.startDate.localeCompare(a.startDate);             
+      23 +  });                                                          
+      24 +}                                                              
+
+⏺ The tests pass. Before committing, I'll check that tsconfig includes the
+  ES2023 lib, since toSorted needs it.
+
+  Searched for 1 pattern (ctrl+o to expand)
+
+⏺ esnext includes it. Committing the green step.
+
+⏺ Bash(git add lib/library/libraryEdits.ts && git commit -q -m "feat(library):
+      [green] sort library with current items first, then newest start date…)
+  ⎿  5c37dd0 feat(library): [green] sort library with current items first,
+     then newest start date
+
+⏺ Step 4: TDD for experienceForm. The first cycle is emptyForm,
+  formFromExperience, and adding and removing bullet rows.
+
+⏺ Write(lib/library/experienceForm.test.ts)
+  ⎿  Wrote 92 lines to lib/library/experienceForm.test.ts
+       1 import { describe, expect, it } from "vitest";
+       2 import {
+       3   addBulletRow,
+       4   emptyForm,
+       5   formFromExperience,
+       6   removeBulletRow,
+       7 } from "@/lib/library/experienceForm";
+       8 import type { Experience } from "@/lib/types";
+       9 
+      10 function fakeNewId() {
+     … +82 lines (ctrl+o to expand)
+
+⏺ Bash(npx vitest run lib/library/experienceForm 2>&1 | grep -E "Tests
+      |Error|FAIL" | head -3; git add lib/library/experienceForm.test.ts && git
+      commit -q -m "test(lib…)
+  ⎿   FAIL  lib/library/experienceForm.test.ts [ lib/library/experienceForm
+     .test.ts ]
+     Error: Cannot find package '@/lib/library/experienceForm' imported fro
+     … +4 lines (ctrl+o to expand)
+
+⏺ Write(lib/library/experienceForm.ts)
+  ⎿  Wrote 57 lines to lib/library/experienceForm.ts
+       1 import type { Experience } from "@/lib/types";
+       2 
+       3 // Form state for adding or editing one library item. Strings ho
+         ld exactly what
+       4 // the inputs show; conversion to an Experience trims and valida
+         tes them.
+       5 export type ExperienceFormValues = {
+       6   id: string;
+       7   type: Experience["type"];
+       8   title: string;
+     … +49 lines (ctrl+o to expand)
+
+⏺ Bash(npx vitest run lib/library 2>&1 | grep -E "Tests |×|Error"; git add
+      lib/library/experienceForm.ts && git commit -q -m "feat(library): [green]
+      create, fill, and…)
+  ⎿        Tests  12 passed (12)
+     3186206 feat(library): [green] create, fill, and edit bullet rows in t
+     he experience form
+
+⏺ Next cycle, red: converting a valid form into an Experience.
+
+⏺ Update(lib/library/experienceForm.test.ts)
+  ⎿  Added 1 line
+      2  import {
+      3    addBulletRow,
+      4    emptyForm,
+      5 +  experienceFromForm,                                           
+      6    formFromExperience,
+      7    removeBulletRow,
+      8  } from "@/lib/library/experienceForm";
+
+⏺ Bash(cat >> lib/library/experienceForm.test.ts <<'EOF'…)
+  ⎿       × round-trips a saved item unchanged 2ms
+          × trims text, drops blank bullet rows, and keeps bullet ids 0ms
+          × turns an empty organization into no value 0ms
+     … +5 lines (ctrl+o to expand)
+  ⎿  Updated lib/library/experienceForm.test.ts +42
+       91      expect(removeBulletRow(form, "id-2").bullets).toEqual([{ i
+           d: "id-2", text: "" }]);
+       92    });
+       93  });
+       94 +                                                              
+       95 +describe("experienceFromForm with valid input", () => {       
+       96 +  it("round-trips a saved item unchanged", () => {            
+       97 +    expect(experienceFromForm(formFromExperience(experience)))
+          +.toEqual({                                                    
+       98 +      ok: true,                                               
+       99 +      experience,                                             
+      100 +    });                                                       
+      101 +  });                                                         
+      102 +                                                              
+      103 +  it("trims text, drops blank bullet rows, and keeps bullet id
+          +s", () => {                                                   
+      104 +    const form = {                                            
+      105 +      ...formFromExperience(experience),                      
+      106 +      title: "  Software Engineering Intern  ",               
+      107 +      organization: " Maplewood Robotics ",                   
+      108 +      bullets: [                                              
+      109 +        { id: "b-1", text: "  Built a dashboard for warehouse 
+          +robot telemetry " },                                          
+      110 +        { id: "blank", text: "   " },                         
+      111 +        { id: "b-2", text: "Cut test suite runtime from 12 to 
+          +4 minutes" },                                                 
+      112 +      ],                                                      
+      113 +    };                                                        
+      114 +    expect(experienceFromForm(form)).toEqual({ ok: true, exper
+          +ience });                                                     
+      115 +  });                                                         
+      116 +                                                              
+      117 +  it("turns an empty organization into no value", () => {     
+      118 +    const result = experienceFromForm({                       
+      119 +      ...formFromExperience(experience),                      
+      120 +      type: "project",                                        
+      121 +      organization: "  ",                                     
+      122 +    });                                                       
+      123 +    expect(result.ok).toBe(true);                             
+      124 +    if (result.ok) expect("organization" in result.experience)
+          +.toBe(false);                                                 
+      125 +  });                                                         
+      126 +                                                              
+      127 +  it("sets endDate to null when Current is ticked, ignoring an
+          +y end month", () => {                                         
+      128 +    const result = experienceFromForm({                       
+      129 +      ...formFromExperience(experience),                      
+      130 +      current: true,                                          
+     … +5 lines (ctrl+o to expand)
+
+⏺ Bash(python3 - <<'EOF'
+      p='lib/library/experienceForm.ts'…)
+  ⎿        Tests  16 passed (16)
+  ⎿  Updated lib/library/experienceForm.ts +26 -1
+      1 -import type { Experience } from "@/lib/types";                  
+      1 +import { experienceSchema, type Experience } from "@/lib/types";
+      2 
+      3  // Form state for adding or editing one library item. Strings ho
+         ld exactly what
+      4  // the inputs show; conversion to an Experience trims and valida
+         tes them.
+     ...
+      15 
+      16  export type NewId = () => string;
+      17 
+      18 +export type FormField = "title" | "organization" | "startDate" 
+         +| "endDate" | "bullets";                                       
+      19 +export type FormErrors = Partial<Record<FormField, string>>;   
+      20 +                                                               
+      21 +export type FormResult =                                       
+      22 +  | { ok: true; experience: Experience }                       
+      23 +  | { ok: false; errors: FormErrors };                         
+      24 +                                                               
+      25  export function emptyForm(newId: NewId): ExperienceFormValues {
+      26    return {
+      27      id: newId(),
+     ...
+      62    if (values.bullets.length <= 1) return values;
+      63    return { ...values, bullets: values.bullets.filter((b) => b.i
+          d !== bulletId) };
+      64  }
+      65 +                                                               
+      66 +export function experienceFromForm(values: ExperienceFormValues
+         +): FormResult {                                                
+      67 +  const organization = values.organization.trim();             
+      68 +  const candidate = {                                          
+      69 +    id: values.id,                                             
+      70 +    type: values.type,                                         
+      71 +    title: values.title.trim(),                                
+      72 +    ...(organization ? { organization } : {}),                 
+      73 +    startDate: values.startDate,                               
+      74 +    endDate: values.current ? null : values.endDate,           
+      75 +    bullets: values.bullets                                    
+      76 +      .map((b) => ({ id: b.id, text: b.text.trim() }))         
+      77 +      .filter((b) => b.text !== ""),                           
+      78 +  };                                                           
+      79 +  const result = experienceSchema.safeParse(candidate);        
+      80 +  if (result.success) return { ok: true, experience: result.dat
+         +a };                                                           
+      81 +  return { ok: false, errors: {} };                            
+      82 +}                                                              
+
+⏺ Bash(git add lib/library/experienceForm.ts && git commit -q -m "feat(library):
+      [green] convert a valid form into an experience…)
+  ⎿  2cec83c feat(library): [green] convert a valid form into an experience
+⏺ Last lib cycle, red: plain-language error messages for each field.
+
+⏺ Bash(cat >> lib/library/experienceForm.test.ts <<'EOF'…)
+  ⎿       × asks for a title when it's blank 4ms
+          × asks for a start month when it's missing 1ms
+          × asks for an end month or Current when the end is missing 0ms
+     … +7 lines (ctrl+o to expand)
+  ⎿  Updated lib/library/experienceForm.test.ts +48
+      133      expect(result).toEqual({ ok: true, experience: { ...experi
+           ence, endDate: null } });
+      134    });
+      135  });
+      136 +                                                              
+      137 +describe("experienceFromForm with invalid input", () => {     
+      138 +  const valid = formFromExperience(experience);               
+      139 +                                                              
+      140 +  function errorsFor(overrides: Partial<typeof valid>) {      
+      141 +    const result = experienceFromForm({ ...valid, ...overrides
+          + });                                                          
+      142 +    expect(result.ok).toBe(false);                            
+      143 +    return result.ok ? {} : result.errors;                    
+      144 +  }                                                           
+      145 +                                                              
+      146 +  it("asks for a title when it's blank", () => {              
+      147 +    expect(errorsFor({ title: "   " })).toEqual({ title: "Add 
+          +a title." });                                                 
+      148 +  });                                                         
+      149 +                                                              
+      150 +  it("asks for a start month when it's missing", () => {      
+      151 +    expect(errorsFor({ startDate: "" })).toEqual({            
+      152 +      startDate: "Pick a start month.",                       
+      153 +    });                                                       
+      154 +  });                                                         
+      155 +                                                              
+      156 +  it("asks for an end month or Current when the end is missing
+          +", () => {                                                    
+      157 +    expect(errorsFor({ endDate: "", current: false })).toEqual
+          +({                                                            
+      158 +      endDate: "Pick an end month, or tick Current.",         
+      159 +    });                                                       
+      160 +  });                                                         
+      161 +                                                              
+      162 +  it("rejects an end month before the start month", () => {   
+      163 +    expect(errorsFor({ startDate: "2025-06", endDate: "2025-01
+          +" })).toEqual({                                               
+      164 +      endDate: "End month can't be before the start month.",  
+      165 +    });                                                       
+      166 +  });                                                         
+      167 +                                                              
+      168 +  it("asks for at least one bullet when every row is blank", (
+          +) => {                                                        
+      169 +    expect(errorsFor({ bullets: [{ id: "b-1", text: "  " }] })
+          +).toEqual({                                                   
+      170 +      bullets: "Add at least one bullet point.",              
+      171 +    });                                                       
+      172 +  });                                                         
+     … +11 lines (ctrl+o to expand)
+
+⏺ Update(lib/library/experienceForm.ts)
+  ⎿  Added 33 lines, removed 2 lines
+       76        .map((b) => ({ id: b.id, text: b.text.trim() }))
+       77        .filter((b) => b.text !== ""),
+       78    };
+       79 +  const errors: FormErrors = {};                              
+       80    const result = experienceSchema.safeParse(candidate);
+       80 -  if (result.success) return { ok: true, experience: result.da
+          -ta };                                                         
+       81 -  return { ok: false, errors: {} };                           
+       81 +  if (!result.success) {                                      
+       82 +    for (const issue of result.error.issues) {                
+       83 +      const field = issue.path[0];                            
+       84 +      if (typeof field === "string" && field in schemaMessages
+          +) {                                                           
+       85 +        errors[field as FormField] ??= schemaMessages[field as
+          + FormField];                                                  
+       86 +      }                                                       
+       87 +    }                                                         
+       88 +  }                                                           
+       89 +                                                              
+       90 +  // Form-only rules, kept out of the shared schema in lib/typ
+          +es.ts.                                                        
+       91 +  if (!values.current && values.endDate === "") {             
+       92 +    errors.endDate = schemaMessages.endDate;                  
+       93 +  } else if (                                                 
+       94 +    !values.current &&                                        
+       95 +    values.startDate !== "" &&                                
+       96 +    values.endDate < values.startDate                         
+       97 +  ) {                                                         
+       98 +    errors.endDate = "End month can't be before the start mont
+          +h.";                                                          
+       99 +  }                                                           
+      100 +                                                              
+      101 +  if (result.success && Object.keys(errors).length === 0) {   
+      102 +    return { ok: true, experience: result.data };             
+      103 +  }                                                           
+      104 +  return { ok: false, errors };                               
+      105  }
+      106 +                                                              
+      107 +const schemaMessages: Record<FormField, string> = {           
+      108 +  title: "Add a title.",                                      
+      109 +  organization: "Organization can't be only spaces.",         
+      110 +  startDate: "Pick a start month.",                           
+      111 +  endDate: "Pick an end month, or tick Current.",             
+      112 +  bullets: "Add at least one bullet point.",                  
+      113 +};                                                            
+
+⏺ Bash(npx vitest run lib/library 2>&1 | grep -E "Tests |×")
+  ⎿        Tests  22 passed (22)
+
+⏺ Bash(git add lib/library/experienceForm.ts && git commit -q -m "feat(library):
+      [green] plain-language errors for invalid form input…)
+  ⎿  08e869a feat(library): [green] plain-language errors for invalid form
+     input
+
+⏺ organization can never fail validation since blank values are dropped first,
+  so I'm removing it from FormField and its unreachable message, and swapping
+  the type casts for a type guard. · summary
+
+⏺ Update(lib/library/experienceForm.ts)
+  ⎿  Added 2 lines, removed 1 line
+      15 
+      16  export type NewId = () => string;
+      17 
+      18 -export type FormField = "title" | "organization" | "startDate" 
+         -| "endDate" | "bullets";                                       
+      18 +// Organization has no error: a blank one is simply omitted.   
+      19 +export type FormField = "title" | "startDate" | "endDate" | "bu
+         +llets";                                                        
+      20  export type FormErrors = Partial<Record<FormField, string>>;
+      21 
+      22  export type FormResult =
+
+⏺ Update(lib/library/experienceForm.ts)
+  ⎿  Added 1 line, removed 3 lines
+      82    if (!result.success) {
+      83      for (const issue of result.error.issues) {
+      84        const field = issue.path[0];
+      85 -      if (typeof field === "string" && field in schemaMessages)
+         - {                                                             
+      86 -        errors[field as FormField] ??= schemaMessages[field as 
+         -FormField];                                                    
+      87 -      }                                                        
+      85 +      if (isFormField(field)) errors[field] ??= schemaMessages[
+         +field];                                                        
+      86      }
+      87    }
+      88 
+
+⏺ Update(lib/library/experienceForm.ts)
+  ⎿  Added 4 lines, removed 1 line
+      105 
+      106  const schemaMessages: Record<FormField, string> = {
+      107    title: "Add a title.",
+      108 -  organization: "Organization can't be only spaces.",         
+      108    startDate: "Pick a start month.",
+      109    endDate: "Pick an end month, or tick Current.",
+      110    bullets: "Add at least one bullet point.",
+      111  };
+      112 +                                                              
+      113 +function isFormField(key: unknown): key is FormField {        
+      114 +  return typeof key === "string" && Object.hasOwn(schemaMessag
+          +es, key);                                                     
+      115 +}                                                             
+
+⏺ Bash(npx vitest run 2>&1 | grep -E "Tests |×" && npx eslint lib && git add
+      lib/library/experienceForm.ts && git commit -q -m "refactor(library): drop
+      unreachable org…)
+  ⎿        Tests  77 passed (77)
+     d56731e refactor(library): drop unreachable organization error and typ
+     e-guard form fields
+
+⏺ All 77 tests pass. Step 5 is the UI: the /library route, its three client
+  components, and a link from the home screen.
+
+  Searched for 1 pattern (ctrl+o to expand)
+
+⏺ Write(app/library/page.tsx)
+  ⎿  Wrote 23 lines to app/library/page.tsx
+       1 import Link from "next/link";
+       2 import { LibraryScreen } from "./LibraryScreen";
+       3 
+       4 export default function LibraryPage() {
+       5   return (
+       6     <main className="mx-auto flex w-full max-w-2xl flex-col gap-
+         6 px-4 py-10">
+       7       <header className="flex flex-col gap-2">
+       8         <Link
+       9           href="/"
+     … +14 lines (ctrl+o to expand)
+
+⏺ Write(app/library/LibraryScreen.tsx)
+  ⎿  Wrote 39 lines to app/library/LibraryScreen.tsx
+       1 "use client";
+       2 
+       3 import Link from "next/link";
+       4 import { useSyncExternalStore } from "react";
+       5 import { browserStore } from "@/lib/storage/browserStore";
+       6 import { loadUserName } from "@/lib/storage/storage";
+       7 import { LibraryEditor } from "./LibraryEditor";
+       8 
+       9 function subscribe(onChange: () => void) {
+      10   window.addEventListener("storage", onChange);
+     … +29 lines (ctrl+o to expand)
+
+⏺ Write(app/library/LibraryEditor.tsx)
+  ⎿  Wrote 158 lines to app/library/LibraryEditor.tsx
+       1 "use client";
+       2 
+       3 import { useState } from "react";
+       4 import {
+       5   emptyForm,
+       6   formFromExperience,
+       7   type ExperienceFormValues,
+       8 } from "@/lib/library/experienceForm";
+       9 import {
+      10   addItem,
+     … +148 lines (ctrl+o to expand)
+
+⏺ Write(app/library/ExperienceForm.tsx)
+  ⎿  Wrote 216 lines to app/library/ExperienceForm.tsx
+       1 "use client";
+       2 
+       3 import { useId, useState, type FormEvent } from "react";
+       4 import {
+       5   addBulletRow,
+       6   experienceFromForm,
+       7   removeBulletRow,
+       8   type ExperienceFormValues,
+       9   type FormErrors,
+      10   type FormField,
+     … +206 lines (ctrl+o to expand)
+
+⏺ ErrorText is declared inside render, which the hooks lint flags, so I'm
+  turning it into a plain function. I'm also making the "fix the problems" note
+  show on any failed save, even when no single field has an error. · summary
+
+⏺ Bash(python3 - <<'EOF'
+      p='app/library/ExperienceForm.tsx'…)
+  ⎿  71:  function errorText(field: FormField) {
+     115:        {errorText("title")}
+     143:          {errorText("startDate")}
+     … +2 lines (ctrl+o to expand)
+  ⎿  Updated app/library/ExperienceForm.tsx +14 -12
+      35    onCancel,
+      36  }: Props) {
+      37    const [values, setValues] = useState(initialValues);
+      38 -  const [errors, setErrors] = useState<FormErrors>({});        
+      38 +  // null = no failed save yet.                                
+      39 +  const [errors, setErrors] = useState<FormErrors | null>(null)
+         +;                                                              
+      40    const idPrefix = useId();
+      41    const fieldId = (name: string) => `${idPrefix}-${name}`;
+      42    const errorId = (field: FormField) => `${idPrefix}-${field}-e
+          rror`;
+     ...
+      63    }
+      64 
+      65    function errorProps(field: FormField) {
+      65 -    return errors[field]                                       
+      66 +    return errors?.[field]                                     
+      67        ? { "aria-invalid": true, "aria-describedby": errorId(fie
+          ld) }
+      68        : {};
+      69    }
+      70 
+      70 -  function ErrorText({ field }: { field: FormField }) {        
+      71 -    if (!errors[field]) return null;                           
+      71 +  function errorText(field: FormField) {                       
+      72 +    const message = errors?.[field];                           
+      73 +    if (!message) return null;                                 
+      74      return (
+      75        <p id={errorId(field)} className="text-sm text-red-600 da
+          rk:text-red-400">
+      74 -        {errors[field]}                                        
+      76 +        {message}                                              
+      77        </p>
+      78      );
+      79    }
+     ...
+      112            className={inputClass}
+      113            {...errorProps("title")}
+      114          />
+      113 -        <ErrorText field="title" />                           
+      115 +        {errorText("title")}                                  
+      116        </div>
+      117 
+      118        <div className="flex flex-col gap-1">
+     ...
+      140              className={inputClass}
+      141              {...errorProps("startDate")}
+     … +30 lines (ctrl+o to expand)
+
+⏺ Now the home screen link in DemoSignIn.
+
+⏺ Update(app/DemoSignIn.tsx)
+  ⎿  Added 4 lines, removed 1 line
+      66              ? "Your library is empty."
+      67              : `Your library has ${libraryCount} saved ${library
+          Count === 1 ? "item" : "items"}.`}
+      68          </p>
+      69 -        <div>                                                  
+      69 +        <div className="flex gap-2">                           
+      70 +          <Link href="/library" className={buttonClass}>       
+      71 +            Manage your library                                
+      72 +          </Link>                                              
+      73            <button
+      74              type="button"
+      75              onClick={handleSignOut}
+
+⏺ Update(app/DemoSignIn.tsx)
+  ⎿  Added 1 line
+      1  "use client";
+      2 
+      3 +import Link from "next/link";                                   
+      4  import { useState, useSyncExternalStore, type FormEvent } from "
+         react";
+      5  import { browserStore } from "@/lib/storage/browserStore";
+      6  import {
+
+⏺ Bash(npm run lint 2>&1 | tail -20 && npm test 2>&1 | grep -E "Tests " && npm
+      run build 2>&1 | tail -20)
+  ⎿  > tailorfit@0.1.0 lint
+     > eslint
+     … +20 lines (ctrl+o to expand)
+  ⎿  (timeout 5m)
+
+⏺ Lint, the 77 tests and the build all pass, and /library prerenders as static.
+  Before committing I'll check the screen in a browser.
+
+⏺ Skill(run)  ⎿  Loaded skill
+
+⏺ Bash(d=$PWD; grep -Hm1 '^description:' "$d"/.claude/skills/*/SKILL.md
+      2>/dev/null; cat /private/tmp/claude-501/bundled-skills/2.1.330/0275acd3e5
+      e8d79ae62e82c1208d487…)
+  ⎿  Error: Exit code 1
+     (eval):1: no matches found: 
+     /Users/stephcarrots/tailorfit/.claude/skills/*/SKILL.md
+
+⏺ Bash(sed -n 1,120p /private/tmp/claude-501/bundled-skills/2.1.330/0275acd3e5e8
+      d79ae62e82c1208d4874/run/examples/playwright.md; which chromium-cli npx)
+  ⎿  Error: Exit code 1
+     # Example: Browser-driven web app
+
+     You have a dev server that serves HTML to a browser. An agent in a
+     headless container can't open a browser window - so "run the app" means
+     launching the dev server, driving a headless Chromium against it, and
+     producing a screenshot that proves the page rendered.
+
+     Don't write a browser driver. Use `chromium-cli`.
+
+     … +82 lines (ctrl+o to expand)
+
+⏺ There's no chromium-cli or Playwright here, and adding a dependency needs your
+  OK. I'll start the dev server and drive it through the Chrome extension
+  instead.
+
+⏺ Bash(lsof -ti:3000 -sTCP:LISTEN; (npm run dev >
+      /private/tmp/claude-501/-Users-stephcarrots-tailorfit/dd9bf13f-0dfd-44a0-b
+      e5b-7d224648b78f/scratchpad/dev.log 2>&1 &)…)
+  ⎿  Error: Exit code 127
+     (eval):1: command not found: timeout
+
+⏺ Bash(for i in $(seq 60); do curl -sf http://localhost:3000/library >/dev/null
+      && break; sleep 1; done; curl -s http://localhost:3000/library | grep -o
+      "Loading…\|You…)
+  ⎿  Loading…
+     Your experience library
+     - Cache Components enabled
+     … +4 lines (ctrl+o to expand)
+
+⏺ The server is up, and /library server-renders the "Loading…" placeholder as
+  intended. Now I'll drive it in Chrome.
+
+⏺ Skill(claude-in-chrome)
+  ⎿  Loaded skill
+
+⏺ Browser tools aren't available, so the interactive checks will need you to do
+  them by hand. Meanwhile I'll commit the UI. Pushing and commenting on #2 will
+  wait until you've checked it.
+
+⏺ Bash(git status --short && git add app/library app/DemoSignIn.tsx && git
+      commit -q -m "feat(library): experience library screen with add, edit, and
+      delete…)
+  ⎿   M app/DemoSignIn.tsx
+     ?? app/library/
+     e00ace3 feat(library): experience library screen with add, edit, and d
+     elete
+
+⏺ I've built #2 and committed it locally, but nothing is pushed yet. The screen
+  hasn't been checked in a browser, because browser tools aren't available in
+  this session.
+
+  What passed: all 77 tests, npm run lint and npm run build. The dev server is
+  running at http://localhost:3000, and /library loads and shows "Loading…"
+  before your saved data is read.
+
+  What's in it (TDD commits had separate red and green steps):
+  - Backup of unreadable data: a new loadLibraryWithBackup in
+    lib/storage/storage.ts. If the saved library can't be read, it copies the
+    raw text to tailorfit:library:backup before anything can overwrite it. The
+    existing loadLibrary is unchanged.
+  - Library editing: lib/library/libraryEdits.ts adds, updates, deletes and
+    sorts items (current items first, then newest start date).
+  - Form logic: lib/library/experienceForm.ts sets up the form and converts it
+    into an experience. Bullet IDs stay the same when you edit. Each field gets
+    a plain-language error.
+  - Screen: the /library route with its components, plus a "Manage your library"
+    button on the signed-in home screen.
+
+  One change from the plan: I dropped organization from the list of fields that
+  can show an error. A blank organization is simply left out, so it can never be
+  invalid.
+
+  Please check these in your browser:
+  1. Signed out, /library shows "Please sign in first" with a link home.
+  2. After signing in, add an experience with an organization, and a project
+     with no organization and Current ticked. Reload: both are still there, with
+     the current one on top.
+  3. Edit an item's bullets. In DevTools → Local Storage, the bullet IDs should
+     be unchanged.
+  4. Try saving with an empty title, no start month, an end month before the
+     start month, and all bullet rows blank. Each should show its own message
+     under the field.
+  5. Delete an item: Cancel keeps it, OK removes it.
+  6. Set tailorfit:library to {bad and reload. The warning should appear, and
+     tailorfit:library:backup should hold {bad.
+
+  Once you confirm, I'll pull with rebase, push, and post a progress comment on
+  #2 that notes the known limitation: the home screen's item count and the
+  library screen don't update each other within one tab. Stop the dev server
+  when you're done with lsof -ti:3000 -sTCP:LISTEN | xargs kill.
+
+✻ Cooked for 5m 15s · done 10:06 PM
+
+※ recap: You're building the experience library for issue #2, and all the code is committed locally with tests passing. Next, check /library by hand at http://localhost:3000, and then I'll push and comment on #2.
+
+❯ All six browser checks passed. Before pushing, run git log --oneline -15 and  
+  confirm the exploration notes and plan commits for #2 are there; if either is 
+  missing, add it first. Then pull with rebase, push, post the progress         
+  comment on #2 with the known limitation, and close #2.                        
+
+⏺ Bash(git log --oneline -15 && git log --oneline --grep="(#2)" && git status
+      --short)
+  ⎿  e00ace3 feat(library): experience library screen with add, edit, and d
+     elete
+     d56731e refactor(library): drop unreachable organization error and typ
+     … +17 lines (ctrl+o to expand)
+
+⏺ The docs commits sit just outside the last 15, but a (#2) search confirms all
+  three are present (5c70ef5, 50138d2, b4aeb14), so nothing needs adding.
+  Pushing and pulling now. · summary
+
+⏺ Bash(git pull --rebase 2>&1 | tail -3 && npm test 2>&1 | grep -E "Tests " &&
+      git push 2>&1 | tail -2 && git log --oneline -1 origin/main)
+  ⎿  From https://github.com/Yifeicarrots/tailorfit
+        98b7e18..8ac03e6  main       -> origin/main
+     Rebasing (1/22)Rebasing (2/22)Rebasing (3/22)Rebasing (4/22)Rebasing (
+     … +10 lines (ctrl+o to expand)
+  ⎿  Updated app/review/BulletComparison.tsx +15 -4
+  ⎿  Updated app/review/page.tsx +5 -2
+  ⎿  Created docs/reflection-outline.md +83
+  ⎿  Created lib/pipeline/prompts.ts +47
+  ⎿  Created lib/pipeline/resumeRewriter.test.ts +309
+  ⎿  … +8 files changed
+     docs/session-logs/04-tdd-and-plan-mode.txt
+     docs/session-logs/05-rewriter-tdd.txt
+     docs/session-logs/06-continue.txt
+     +5 more
+  ⎿  (a git step in this command can move the working tree, so these may be
+     its changes, not edits) (ctrl+o to expand)
+  ⎿  (timeout 2m)
+
+⏺ My 22 local commits rebased cleanly onto your teammate's new work, 94 tests
+  pass, and the push went through. I'm rerunning lint and the build before I
+  post. · summary
+
+⏺ Bash(git log --oneline 98b7e18..8ac03e6 && npm run lint 2>&1 | tail -3 && npm
+      run build 2>&1 | grep -E "✓ Compiled|error|Error|/library" )
+  ⎿  8ac03e6 docs: add session log 06 showing claude --continue
+     be82179 docs: add annotated session log 05 (compact, teammate sync, re
+     writer TDD)
+     … +20 lines (ctrl+o to expand)
+  ⎿  (timeout 5m)
+
+⏺ Lint and the build pass with your teammate's rewriter and review changes
+  included. Now I'll post the comment and close #2.
+
+⏺ Bash(gh issue comment 2 --body "$(cat <<'EOF'
+      Done and pushed to `main` (through `22d8ba0`).…)
+  ⎿  https://github.com/Yifeicarrots/tailorfit/issues/2#issuecomment-709285
+     0607
+     ✓ Closed issue Yifeicarrots/tailorfit#2 (Experience library: add, edit
+     … +2 lines (ctrl+o to expand)
+
+⏺ #2 is done: pushed to main (now at 22d8ba0), progress comment posted, and the
+  issue closed.
+
+  - Docs commits: all three are in the history. They didn't show in git log 
+    --oneline -15 only because the 15 implementation commits after them pushed
+    them out of that window. They are 5c70ef5 (exploration notes), 50138d2
+    (decisions) and b4aeb14 (plan), so nothing needed adding.
+  - Pull and push: your teammate had pushed 18 commits (the rewriter and the
+    review screen moved onto the shared types). My 22 local commits were rebased
+    on top of them with no conflicts. Before pushing, all 94 tests passed.
+    After pushing, lint and the build also passed with their changes included.
+    Only my unpushed commits were rebased.
+  - Issue #2: the comment is at
+    https://github.com/Yifeicarrots/tailorfit/issues/2#issuecomment-7092850607.
+    It covers the checklist, the backup with its warning, the known limitation
+    (the home screen's item count and the library screen don't update each other
+    within one tab), and your six browser checks.
+
+  The dev server is probably still running on port 3000. Stop it with lsof 
+  -ti:3000 -sTCP:LISTEN | xargs kill.
+
+✻ Crunched for 36s · done 10:55 PM
