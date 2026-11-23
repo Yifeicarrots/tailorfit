@@ -1,3 +1,5 @@
+import type { Experience, SelectionResult } from "@/lib/types";
+
 export type NoInventionResult = { ok: true } | { ok: false; problems: string[] };
 
 const NUMBER_PATTERN = /\d+(?:[.,]\d+)*%?/g;
@@ -56,4 +58,15 @@ export function checkNoInvention(
     ...findInventedTerms(original, rewritten),
   ];
   return problems.length === 0 ? { ok: true } : { ok: false, problems };
+}
+
+export type SelectionIdsResult = { ok: true } | { ok: false; problems: string[] };
+
+export function checkSelectionIds(
+  selection: SelectionResult,
+  library: Experience[],
+): SelectionIdsResult {
+  void selection;
+  void library;
+  return { ok: true };
 }
