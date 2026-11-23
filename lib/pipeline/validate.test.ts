@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { checkNoInvention } from "./validate";
+import type { Experience } from "@/lib/types";
+import { checkNoInvention, checkSelectionIds } from "./validate";
 
 describe("checkNoInvention — numbers", () => {
   it("accepts a rewrite that adds no numbers", () => {
@@ -119,5 +120,39 @@ describe("checkNoInvention — skills and employers", () => {
       expect.stringContaining("30%"),
       expect.stringContaining("Redis"),
     ]);
+  });
+});
+
+// Fictional person and employers.
+const library: Experience[] = [
+  {
+    id: "exp-cafe",
+    type: "experience",
+    title: "Barista",
+    organization: "Juniper Street Cafe",
+    startDate: "2024-05",
+    endDate: null,
+    bullets: [{ id: "cafe-1", text: "Ran the register during weekend shifts" }],
+  },
+  {
+    id: "proj-garden",
+    type: "project",
+    title: "Community garden website",
+    startDate: "2023-09",
+    endDate: "2024-01",
+    bullets: [{ id: "garden-1", text: "Built a volunteer sign-up page" }],
+  },
+];
+
+describe("checkSelectionIds", () => {
+  it("accepts a selection whose IDs are all in the library", () => {
+    const selection = {
+      selected: [
+        { id: "proj-garden", reason: "Shows web skills" },
+        { id: "exp-cafe", reason: "Shows customer service" },
+      ],
+    };
+
+    expect(checkSelectionIds(selection, library)).toEqual({ ok: true });
   });
 });
